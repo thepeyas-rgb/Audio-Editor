@@ -551,51 +551,19 @@ processBtn.onclick = async () => {
 
   }
 };
-  downloadBtn.addEventListener("click", async (e) => {
-
-  e.preventDefault();
+downloadBtn.addEventListener("click", function(e) {
 
   if (!editedBlob) {
+    e.preventDefault();
     alert("No edited audio available!");
     return;
   }
 
-  try {
-
-    const file = new File(
-      [editedBlob],
-      "Edited_Audio.wav",
-      { type: "audio/wav" }
-    );
-
-    if (
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-
-      await navigator.share({
-        files: [file],
-        title: "Edited Audio"
-      });
-
-    } else {
-
-      alert(
-        "File sharing is not supported here. " +
-        "Open this website in Google Chrome."
-      );
-
-    }
-
-  } catch (error) {
-
-    if (error.name !== "AbortError") {
-      alert("Sharing failed: " + error.message);
-    }
-
-  }
+  downloadBtn.href = editedURL;
+  downloadBtn.download = "Edited_Audio.wav";
 
 });
+  
 </script>
 
 </body>
