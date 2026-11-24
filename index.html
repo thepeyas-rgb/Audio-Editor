@@ -1,0 +1,602 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Audio Cleaner</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: #10131c;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  color: #55e6a5;
+}
+
+.subtitle {
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.card {
+  background: #1c2230;
+  padding: 20px;
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+.upload {
+  display: block;
+  padding: 25px;
+  text-align: center;
+  border: 2px dashed #55e6a5;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #55e6a5;
+}
+
+input[type=file] {
+  display: none;
+}
+
+label {
+  display: block;
+  margin: 18px 0 8px;
+}
+
+input[type=range] {
+  width: 100%;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #55e6a5;
+  color: #10131c;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 15px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+}
+
+audio {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.info {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#status {
+  color: #55e6a5;
+  text-align: center;
+  margin-top: 15px;
+  overflow-wrap: anywhere;
+}
+
+.download {
+  background: #3478f6;
+  color: white;
+  text-decoration: none;
+  display: block;
+  text-align: center;
+  padding: 14px;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>AI Audio Cleaner</h1>
+<p class="subtitle">Automatic Silence Remover</p>
+
+<div class="card">
+
+<label class="upload" for="audioFile">
+  🎵<br><br>
+  Select Your Audio File<br>
+  <small>MP3 / WAV / M4A / Other supported formats</small>
+</label>
+
+<input type="file" id="audioFile" accept="audio/*">
+
+<p id="fileName" class="info">No audio selected.</p>
+
+<audio id="originalAudio" controls></audio>
+
+</div>
+
+<div class="card">
+
+<h3>⚙️ Editing Settings</h3>
+
+<label>
+Maximum Silence: 
+<span id="gapValue">0.10</span> Seconds
+</label>
+
+<input type="range"
+ id="maxGap"
+ min="0.05"
+ max="0.50"
+ step="0.01"
+ value="0.10">
+
+<label>
+Silence Detection Threshold:
+<span id="thresholdValue">-42</span> dB
+</label>
+
+<input type="range"
+ id="threshold"
+ min="-60"
+ max="-20"
+ step="1"
+ value="-42">
+
+<p class="info">
+Long silent gaps will be shortened to the selected maximum duration.
+Lower threshold values help preserve quiet speech.
+</p>
+
+<button id="processBtn" disabled>
+✂️ Remove Long Pauses
+</button>
+
+<p id="status">Waiting for audio...</p>
+
+</div>
+
+<div class="card">
+
+<h3>✅ Edited Audio</h3>
+
+<audio id="editedAudio" controls></audio>
+
+<a id="downloadBtn"
+ class="download"
+ style="display:none">
+⬇ Download Edited WAV
+</a>
+
+<p id="resultInfo" class="info"></p>
+
+</div>
+
+</div>
+
+<script>
+const fileInput = document.getElementById("audioFile");
+const originalAudio = document.getElementById("originalAudio");
+const editedAudio = document.getElementById("editedAudio");
+const processBtn = document.getElementById("processBtn");
+const statusText = document.getElementById("status");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let audioBuffer = null;
+let originalURL = null;
+let editedURL = null;
+  let editedBlob = null;
+
+const maxGap = document.getElementById("maxGap");
+const threshold = document.getElementById("threshold");
+
+maxGap.oninput = () => {
+  document.getElementById("gapValue").textContent =
+    Number(maxGap.value).toFixed(2);
+};
+
+threshold.oninput = () => {
+  document.getElementById("thresholdValue").textContent =
+    threshold.value;
+};
+
+fileInput.onchange = async () => {
+
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  processBtn.disabled = true;
+  downloadBtn.style.display = "none";
+  statusText.textContent = "Loading audio...";
+
+  if (originalURL) URL.revokeObjectURL(originalURL);
+  if (editedURL) URL.revokeObjectURL(editedURL);
+
+  originalURL = URL.createObjectURL(file);
+  originalAudio.src = originalURL;
+
+  document.getElementById("fileName").textContent =
+    file.name + " (" + (file.size / 1024 / 1024).toFixed(2) + " MB)";
+
+  try {
+
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    const context = new AudioContextClass();
+
+    const arrayBuffer = await file.arrayBuffer();
+
+    audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+    await context.close();
+
+    processBtn.disabled = false;
+
+    statusText.textContent =
+      "Audio ready! Duration: " +
+      audioBuffer.duration.toFixed(2) + " seconds.";
+
+  } catch (error) {
+
+    audioBuffer = null;
+    statusText.textContent =
+      "Could not read this audio. Try another format.";
+
+  }
+};
+
+function createWav(buffer) {
+
+  const channels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length;
+
+  const bytesPerSample = 2;
+  const blockAlign = channels * bytesPerSample;
+
+  const wavBuffer = new ArrayBuffer(
+    44 + length * blockAlign
+  );
+
+  const view = new DataView(wavBuffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + length * blockAlign, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, length * blockAlign, true);
+
+  const channelData = [];
+
+  for (let c = 0; c < channels; c++) {
+    channelData.push(buffer.getChannelData(c));
+  }
+
+  let offset = 44;
+
+  for (let i = 0; i < length; i++) {
+
+    for (let c = 0; c < channels; c++) {
+
+      let sample = channelData[c][i];
+
+      sample = Math.max(-1, Math.min(1, sample));
+
+      const value = sample < 0
+        ? sample * 32768
+        : sample * 32767;
+
+      view.setInt16(offset, value, true);
+      offset += 2;
+
+    }
+  }
+
+  return new Blob([wavBuffer], {
+    type: "audio/wav"
+  });
+}
+
+processBtn.onclick = async () => {
+
+  if (!audioBuffer) return;
+
+  processBtn.disabled = true;
+  downloadBtn.style.display = "none";
+
+  try {
+
+    statusText.textContent = "Analyzing audio...";
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const sampleRate = audioBuffer.sampleRate;
+    const channels = audioBuffer.numberOfChannels;
+    const totalSamples = audioBuffer.length;
+
+    // Analyze audio in 10ms frames
+
+    const frameSize = Math.max(
+      1, Math.round(sampleRate * 0.01)
+    );
+
+    const frameCount = Math.ceil(
+      totalSamples / frameSize
+    );
+
+    const silenceLimit = Math.pow(
+      10, Number(threshold.value) / 20
+    );
+
+    const maxSilentFrames = Math.floor(
+      Number(maxGap.value) * sampleRate / frameSize
+    );
+
+    const silent = new Uint8Array(frameCount);
+
+    const channelData = [];
+
+    for (let c = 0; c < channels; c++) {
+      channelData.push(audioBuffer.getChannelData(c));
+    }
+
+    // Detect silence using RMS volume
+
+    for (let f = 0; f < frameCount; f++) {
+
+      let sum = 0;
+      let count = 0;
+
+      const start = f * frameSize;
+      const end = Math.min(
+        start + frameSize, totalSamples
+      );
+
+      for (let i = start; i < end; i++) {
+
+        for (let c = 0; c < channels; c++) {
+
+          const sample = channelData[c][i];
+
+          sum += sample * sample;
+          count++;
+
+        }
+      }
+
+      const rms = Math.sqrt(sum / Math.max(1, count));
+
+      if (rms < silenceLimit) {
+        silent[f] = 1;
+      }
+    }
+
+    // Keep only the maximum allowed silence
+    // from every continuous silent region.
+
+    const keep = new Uint8Array(frameCount);
+    keep.fill(1);
+
+    let removedFrames = 0;
+    let f = 0;
+
+    while (f < frameCount) {
+
+      if (!silent[f]) {
+        f++;
+        continue;
+      }
+
+      const start = f;
+
+      while (f < frameCount && silent[f]) {
+        f++;
+      }
+
+      const runLength = f - start;
+
+      if (runLength > maxSilentFrames) {
+
+        const removeStart = start + maxSilentFrames;
+
+        for (let j = removeStart; j < f; j++) {
+          keep[j] = 0;
+          removedFrames++;
+        }
+      }
+    }
+
+    statusText.textContent = "Creating edited audio...";
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Calculate output size
+
+    let outputLength = 0;
+
+    for (let i = 0; i < frameCount; i++) {
+
+      if (keep[i]) {
+
+        outputLength += Math.min(
+          frameSize,
+          totalSamples - i * frameSize
+        );
+
+      }
+    }
+
+    if (outputLength === 0) {
+      throw new Error("No audio remains.");
+    }
+
+    // Build edited audio buffer
+
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    const outputContext = new AudioContextClass();
+
+    const outputBuffer = outputContext.createBuffer(
+      channels,
+      outputLength,
+      sampleRate
+    );
+
+    for (let c = 0; c < channels; c++) {
+
+      const source = channelData[c];
+      const destination = outputBuffer.getChannelData(c);
+
+      let writePosition = 0;
+
+      for (let i = 0; i < frameCount; i++) {
+
+        if (!keep[i]) continue;
+
+        const start = i * frameSize;
+
+        const end = Math.min(
+          start + frameSize,
+          totalSamples
+        );
+
+        const chunk = source.subarray(start, end);
+
+        destination.set(chunk, writePosition);
+
+        writePosition += chunk.length;
+
+      }
+    }
+
+    await outputContext.close();
+
+    // Export WAV
+
+    const wavBlob = createWav(outputBuffer);
+    editedBlob = wavBlob;
+
+    if (editedURL) URL.revokeObjectURL(editedURL);
+
+    editedURL = URL.createObjectURL(wavBlob);
+
+    editedAudio.src = editedURL;
+
+    downloadBtn.href = editedURL;
+    downloadBtn.download = "Edited_Audio.wav";
+    downloadBtn.style.display = "block";
+
+    const removedSeconds =
+      removedFrames * frameSize / sampleRate;
+
+    const finalDuration =
+      outputBuffer.duration;
+
+    document.getElementById("resultInfo").textContent =
+      "Original: " + audioBuffer.duration.toFixed(2) +
+      " seconds | Edited: " + finalDuration.toFixed(2) +
+      " seconds | Removed: " + removedSeconds.toFixed(2) +
+      " seconds.";
+
+    statusText.textContent = "Editing completed successfully!";
+
+  } catch (error) {
+
+    console.error(error);
+
+    statusText.textContent =
+      "Error: " + error.message;
+
+  } finally {
+
+    processBtn.disabled = false;
+
+  }
+};
+  downloadBtn.addEventListener("click", async (e) => {
+
+  e.preventDefault();
+
+  if (!editedBlob) {
+    alert("No edited audio available!");
+    return;
+  }
+
+  try {
+
+    const file = new File(
+      [editedBlob],
+      "Edited_Audio.wav",
+      { type: "audio/wav" }
+    );
+
+    if (
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+
+      await navigator.share({
+        files: [file],
+        title: "Edited Audio"
+      });
+
+    } else {
+
+      alert(
+        "File sharing is not supported here. " +
+        "Open this website in Google Chrome."
+      );
+
+    }
+
+  } catch (error) {
+
+    if (error.name !== "AbortError") {
+      alert("Sharing failed: " + error.message);
+    }
+
+  }
+
+});
+</script>
+
+</body>
+</html>
