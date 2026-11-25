@@ -1,1895 +1,537 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Audio Cleaner</title>
-
+<title>AI Audio Cleaner V2</title>
 <style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 20px;
-  background: #10131c;
-  color: white;
-  font-family: Arial, sans-serif;
-}
-
-.container {
-  max-width: 500px;
-  margin: auto;
-}
-
-h1 {
-  text-align: center;
-  color: #55e6a5;
-}
-
-.subtitle {
-  text-align: center;
-  color: #aaa;
-  font-size: 14px;
-}
-
-.card {
-  background: #1c2230;
-  padding: 20px;
-  border-radius: 15px;
-  margin-top: 20px;
-}
-
-.upload {
-  display: block;
-  padding: 25px;
-  text-align: center;
-  border: 2px dashed #55e6a5;
-  border-radius: 12px;
-  cursor: pointer;
-  color: #55e6a5;
-}
-
-input[type=file] {
-  display: none;
-}
-
-label {
-  display: block;
-  margin: 18px 0 8px;
-}
-
-input[type=range] {
-  width: 100%;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 10px;
-  background: #55e6a5;
-  color: #10131c;
-  font-size: 16px;
-  font-weight: bold;
-  margin-top: 15px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.4;
-}
-
-audio {
-  width: 100%;
-  margin-top: 15px;
-}
-
-.info {
-  color: #aaa;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-#status {
-  color: #55e6a5;
-  text-align: center;
-  margin-top: 15px;
-  overflow-wrap: anywhere;
-}
-
-.download {
-  background: #3478f6;
-  color: white;
-  text-decoration: none;
-  display: block;
-  text-align: center;
-  padding: 14px;
-  border-radius: 10px;
-  margin-top: 15px;
-}
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#10131c;color:#fff;font-family:Arial,sans-serif}
+.container{max-width:560px;margin:auto}
+h1{text-align:center;color:#55e6a5}
+.subtitle{text-align:center;color:#aaa;font-size:14px}
+.card{background:#1c2230;padding:18px;border-radius:15px;margin-top:18px}
+h2,h3{color:#55e6a5;margin-top:0}
+.upload{display:block;padding:24px;text-align:center;border:2px dashed #55e6a5;border-radius:12px;cursor:pointer;color:#55e6a5}
+input[type=file]{display:none}
+label{display:block;margin:14px 0 8px}
+input[type=range]{width:100%}
+button{width:100%;padding:13px;border:0;border-radius:9px;background:#55e6a5;color:#10131c;font-size:15px;font-weight:bold;margin-top:12px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:#3478f6;color:white}
+.danger{background:#c84b61;color:white}
+audio{width:100%;margin-top:10px}
+.info{color:#aaa;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.status{color:#55e6a5;text-align:center;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6}
+.download{display:block;background:#3478f6;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:9px;margin-top:12px}
+.item{background:#293244;padding:14px;border-radius:10px;margin-top:12px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1;min-width:0}
+.smallbtn{font-size:13px;padding:10px;margin-top:8px}
+.timegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.timegrid input,select{width:100%;padding:10px;background:#10131c;color:white;border:1px solid #586174;border-radius:7px}
+.rtcheckbox{width:20px;height:20px;flex-shrink:0}
+.note{background:#332d20;border-left:3px solid #e7b44b;padding:10px;border-radius:6px;color:#e9d6a6;font-size:12px;line-height:1.5}
+.good{color:#55e6a5}
 </style>
 </head>
-
 <body>
-
 <div class="container">
-
 <h1>AI Audio Cleaner</h1>
-<p class="subtitle">Automatic Silence Remover</p>
+<p class="subtitle">Silence Remover + AI Retake Review + Manual Editing</p>
 
 <div class="card">
-
-<label class="upload" for="audioFile">
-  🎵<br><br>
-  Select Your Audio File<br>
-  <small>MP3 / WAV / M4A / Other supported formats</small>
-</label>
-
+<label class="upload" for="audioFile">🎵<br><br><b>Select Your Audio File</b><br><small>MP3 / WAV / M4A / supported browser formats</small></label>
 <input type="file" id="audioFile" accept="audio/*">
-
 <p id="fileName" class="info">No audio selected.</p>
-
-<audio id="originalAudio" controls></audio>
-
+<audio id="mainAudio" controls></audio>
+<p id="audioState" class="info">The original upload is kept separately. All edits are applied cumulatively to the working audio.</p>
 </div>
 
 <div class="card">
-
-<h3>⚙️ Editing Settings</h3>
-
-<label>
-Maximum Silence: 
-<span id="gapValue">0.10</span> Seconds
-</label>
-
-<input type="range"
- id="maxGap"
- min="0.05"
- max="0.50"
- step="0.01"
- value="0.10">
-
-<label>
-Silence Detection Threshold:
-<span id="thresholdValue">-42</span> dB
-</label>
-
-<input type="range"
- id="threshold"
- min="-60"
- max="-20"
- step="1"
- value="-42">
-
-<p class="info">
-Long silent gaps will be shortened to the selected maximum duration.
-Lower threshold values help preserve quiet speech.
-</p>
-
-<button id="processBtn" disabled>
-✂️ Remove Long Pauses
-</button>
-
-<p id="status">Waiting for audio...</p>
-
+<h3>⚙️ Silence Remover</h3>
+<label>Maximum silence: <span id="gapValue">0.10</span> seconds</label>
+<input type="range" id="maxGap" min="0.05" max="0.50" step="0.01" value="0.10">
+<label>Silence detection threshold: <span id="thresholdValue">-42</span> dB</label>
+<input type="range" id="threshold" min="-60" max="-20" step="1" value="-42">
+<p class="info">Long silent regions are shortened to the selected maximum duration. Quiet speech may be affected if the threshold is set too high.</p>
+<button id="silenceBtn" disabled>✂️ Remove Long Pauses</button>
+<p id="silenceStatus" class="status">Waiting for audio...</p>
 </div>
 
 <div class="card">
+<h3>🧠 AI Retake & Duplicate Remover</h3>
+<p class="info">The AI checks the current working audio (including any silence edits already applied). Review each suggestion and listen before approving a cut.</p>
+<div class="note">Important: Whisper timestamps are approximate segment timestamps, not guaranteed word-perfect boundaries. Always preview and adjust the cut range before applying it. Mixed Bangla-English speech recognition quality can vary.</div>
+<div class="item">
+<b>Local AI Model</b>
+<p class="info">Whisper Tiny multilingual · Runs in your browser after model download. The model is cached by the browser when possible.</p>
+<button id="loadModelBtn">⬇ Load / Download AI Model</button>
+<p id="modelStatus" class="status">AI model not loaded.</p>
+</div>
+<div class="item">
+<b>Detection Settings</b>
+<label class="info">Minimum matching words</label>
+<select id="minWords">
+<option value="4">4 words (more sensitive)</option>
+<option value="5" selected>5 words (recommended)</option>
+<option value="7">7 words</option>
+<option value="10">10 words (strict)</option>
+</select>
+<label class="info">Maximum time between attempts</label>
+<select id="maxRetakeGap">
+<option value="10">10 seconds</option>
+<option value="20" selected>20 seconds</option>
+<option value="30">30 seconds</option>
+<option value="60">60 seconds</option>
+</select>
+</div>
+<button id="detectBtn" disabled>🔍 Detect Retakes & Duplicates</button>
+<p id="retakeStatus" class="status">Upload audio, then load the model.</p>
+<div id="retakeResults"></div>
+<div class="row">
+<button id="selectAllBtn" class="secondary" disabled>Select All</button>
+<button id="clearAllBtn" class="secondary" disabled>Clear Selection</button>
+</div>
+<button id="applyRetakesBtn" disabled>✂️ Apply Selected Retake Cuts</button>
+</div>
 
-<h3>✅ Edited Audio</h3>
+<div class="card">
+<h3>🎧 Preview / Manual Cut</h3>
+<p class="info">You can preview a selected audio range with surrounding context and cut it manually. Times refer to the current working audio.</p>
+<div class="timegrid">
+<div><label>Start (seconds)</label><input type="number" id="manualStart" min="0" step="0.01" value="0"></div>
+<div><label>End (seconds)</label><input type="number" id="manualEnd" min="0" step="0.01" value="0"></div>
+</div>
+<button id="previewManualBtn" class="secondary" disabled>▶ Preview Selected Range (+ context)</button>
+<audio id="previewAudio" controls></audio>
+<button id="applyManualBtn" class="danger" disabled>✂️ Cut This Range</button>
+<p id="manualStatus" class="status">Load an audio file to enable manual editing.</p>
+</div>
 
+<div class="card">
+<h3>✅ Current Edited Audio</h3>
 <audio id="editedAudio" controls></audio>
-
-<a id="downloadBtn"
- class="download"
- style="display:none">
-⬇ Download Edited WAV
-</a>
-
-<p id="resultInfo" class="info"></p>
-
+<a id="downloadBtn" class="download" style="display:none">⬇ Download Current Edited WAV</a>
+<p id="resultInfo" class="info">No edits applied yet.</p>
+<button id="undoBtn" class="secondary" disabled>↶ Undo Last Edit</button>
+<button id="resetBtn" class="danger" disabled>Reset to Original Upload</button>
+</div>
 </div>
 
-</div>
-
-<script>
-const fileInput = document.getElementById("audioFile");
-const originalAudio = document.getElementById("originalAudio");
-const editedAudio = document.getElementById("editedAudio");
-const processBtn = document.getElementById("processBtn");
-const statusText = document.getElementById("status");
-const downloadBtn = document.getElementById("downloadBtn");
-
-let audioBuffer = null;
-let originalURL = null;
-let editedURL = null;
-  let editedBlob = null;
-
-const maxGap = document.getElementById("maxGap");
-const threshold = document.getElementById("threshold");
-
-maxGap.oninput = () => {
-  document.getElementById("gapValue").textContent =
-    Number(maxGap.value).toFixed(2);
-};
-
-threshold.oninput = () => {
-  document.getElementById("thresholdValue").textContent =
-    threshold.value;
-};
-
-fileInput.onchange = async () => {
-
-  const file = fileInput.files[0];
-
-  if (!file) return;
-
-  processBtn.disabled = true;
-  downloadBtn.style.display = "none";
-  statusText.textContent = "Loading audio...";
-
-  if (originalURL) URL.revokeObjectURL(originalURL);
-  if (editedURL) URL.revokeObjectURL(editedURL);
-
-  originalURL = URL.createObjectURL(file);
-  originalAudio.src = originalURL;
-
-  document.getElementById("fileName").textContent =
-    file.name + " (" + (file.size / 1024 / 1024).toFixed(2) + " MB)";
-
-  try {
-
-    const AudioContextClass =
-      window.AudioContext || window.webkitAudioContext;
-
-    const context = new AudioContextClass();
-
-    const arrayBuffer = await file.arrayBuffer();
-
-    audioBuffer = await context.decodeAudioData(arrayBuffer);
-
-    await context.close();
-
-    processBtn.disabled = false;
-
-    statusText.textContent =
-      "Audio ready! Duration: " +
-      audioBuffer.duration.toFixed(2) + " seconds.";
-
-  } catch (error) {
-
-    audioBuffer = null;
-    statusText.textContent =
-      "Could not read this audio. Try another format.";
-
-  }
-};
-
-function createWav(buffer) {
-
-  const channels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const length = buffer.length;
-
-  const bytesPerSample = 2;
-  const blockAlign = channels * bytesPerSample;
-
-  const wavBuffer = new ArrayBuffer(
-    44 + length * blockAlign
-  );
-
-  const view = new DataView(wavBuffer);
-
-  function writeString(offset, string) {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  }
-
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + length * blockAlign, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, channels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, length * blockAlign, true);
-
-  const channelData = [];
-
-  for (let c = 0; c < channels; c++) {
-    channelData.push(buffer.getChannelData(c));
-  }
-
-  let offset = 44;
-
-  for (let i = 0; i < length; i++) {
-
-    for (let c = 0; c < channels; c++) {
-
-      let sample = channelData[c][i];
-
-      sample = Math.max(-1, Math.min(1, sample));
-
-      const value = sample < 0
-        ? sample * 32768
-        : sample * 32767;
-
-      view.setInt16(offset, value, true);
-      offset += 2;
-
-    }
-  }
-
-  return new Blob([wavBuffer], {
-    type: "audio/wav"
-  });
-}
-
-processBtn.onclick = async () => {
-
-  if (!audioBuffer) return;
-
-  processBtn.disabled = true;
-  downloadBtn.style.display = "none";
-
-  try {
-
-    statusText.textContent = "Analyzing audio...";
-
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    const sampleRate = audioBuffer.sampleRate;
-    const channels = audioBuffer.numberOfChannels;
-    const totalSamples = audioBuffer.length;
-
-    // Analyze audio in 10ms frames
-
-    const frameSize = Math.max(
-      1, Math.round(sampleRate * 0.01)
-    );
-
-    const frameCount = Math.ceil(
-      totalSamples / frameSize
-    );
-
-    const silenceLimit = Math.pow(
-      10, Number(threshold.value) / 20
-    );
-
-    const maxSilentFrames = Math.floor(
-      Number(maxGap.value) * sampleRate / frameSize
-    );
-
-    const silent = new Uint8Array(frameCount);
-
-    const channelData = [];
-
-    for (let c = 0; c < channels; c++) {
-      channelData.push(audioBuffer.getChannelData(c));
-    }
-
-    // Detect silence using RMS volume
-
-    for (let f = 0; f < frameCount; f++) {
-
-      let sum = 0;
-      let count = 0;
-
-      const start = f * frameSize;
-      const end = Math.min(
-        start + frameSize, totalSamples
-      );
-
-      for (let i = start; i < end; i++) {
-
-        for (let c = 0; c < channels; c++) {
-
-          const sample = channelData[c][i];
-
-          sum += sample * sample;
-          count++;
-
-        }
-      }
-
-      const rms = Math.sqrt(sum / Math.max(1, count));
-
-      if (rms < silenceLimit) {
-        silent[f] = 1;
-      }
-    }
-
-    // Keep only the maximum allowed silence
-    // from every continuous silent region.
-
-    const keep = new Uint8Array(frameCount);
-    keep.fill(1);
-
-    let removedFrames = 0;
-    let f = 0;
-
-    while (f < frameCount) {
-
-      if (!silent[f]) {
-        f++;
-        continue;
-      }
-
-      const start = f;
-
-      while (f < frameCount && silent[f]) {
-        f++;
-      }
-
-      const runLength = f - start;
-
-      if (runLength > maxSilentFrames) {
-
-        const removeStart = start + maxSilentFrames;
-
-        for (let j = removeStart; j < f; j++) {
-          keep[j] = 0;
-          removedFrames++;
-        }
-      }
-    }
-
-    statusText.textContent = "Creating edited audio...";
-
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Calculate output size
-
-    let outputLength = 0;
-
-    for (let i = 0; i < frameCount; i++) {
-
-      if (keep[i]) {
-
-        outputLength += Math.min(
-          frameSize,
-          totalSamples - i * frameSize
-        );
-
-      }
-    }
-
-    if (outputLength === 0) {
-      throw new Error("No audio remains.");
-    }
-
-    // Build edited audio buffer
-
-    const AudioContextClass =
-      window.AudioContext || window.webkitAudioContext;
-
-    const outputContext = new AudioContextClass();
-
-    const outputBuffer = outputContext.createBuffer(
-      channels,
-      outputLength,
-      sampleRate
-    );
-
-    for (let c = 0; c < channels; c++) {
-
-      const source = channelData[c];
-      const destination = outputBuffer.getChannelData(c);
-
-      let writePosition = 0;
-
-      for (let i = 0; i < frameCount; i++) {
-
-        if (!keep[i]) continue;
-
-        const start = i * frameSize;
-
-        const end = Math.min(
-          start + frameSize,
-          totalSamples
-        );
-
-        const chunk = source.subarray(start, end);
-
-        destination.set(chunk, writePosition);
-
-        writePosition += chunk.length;
-
-      }
-    }
-
-    await outputContext.close();
-
-    // Export WAV
-
-    const wavBlob = createWav(outputBuffer);
-    editedBlob = wavBlob;
-
-    if (editedURL) URL.revokeObjectURL(editedURL);
-
-    editedURL = URL.createObjectURL(wavBlob);
-
-    editedAudio.src = editedURL;
-
-    downloadBtn.href = editedURL;
-    downloadBtn.download = "Edited_Audio.wav";
-    downloadBtn.style.display = "block";
-
-    const removedSeconds =
-      removedFrames * frameSize / sampleRate;
-
-    const finalDuration =
-      outputBuffer.duration;
-
-    document.getElementById("resultInfo").textContent =
-      "Original: " + audioBuffer.duration.toFixed(2) +
-      " seconds | Edited: " + finalDuration.toFixed(2) +
-      " seconds | Removed: " + removedSeconds.toFixed(2) +
-      " seconds.";
-
-    statusText.textContent = "Editing completed successfully!";
-
-  } catch (error) {
-
-    console.error(error);
-
-    statusText.textContent =
-      "Error: " + error.message;
-
-  } finally {
-
-    processBtn.disabled = false;
-
-  }
-};
-downloadBtn.addEventListener("click", function(e) {
-
-  if (!editedBlob) {
-    e.preventDefault();
-    alert("No edited audio available!");
-    return;
-  }
-
-  downloadBtn.href = editedURL;
-  downloadBtn.download = "Edited_Audio.wav";
-
-});
-  
-</script>
-
-<!-- ==========================================
- AI RETAKE & DUPLICATE SENTENCE REMOVER
- Add below your existing Silence Remover.
-=========================================== -->
-
-<style>
-#retakeTool {
-  background: #1c2230;
-  color: white;
-  padding: 20px;
-  border-radius: 15px;
-  margin: 20px auto;
-  max-width: 500px;
-  font-family: Arial, sans-serif;
-}
-
-#retakeTool h2 {
-  color: #55e6a5;
-  margin-top: 0;
-}
-
-#retakeTool .rt-info {
-  color: #aaa;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-#retakeTool button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 12px;
-  border: none;
-  border-radius: 9px;
-  background: #55e6a5;
-  color: #10131c;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#retakeTool button:disabled {
-  opacity: 0.4;
-}
-
-#retakeTool .rt-status {
-  color: #55e6a5;
-  font-size: 13px;
-  margin-top: 15px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-#retakeTool .rt-item {
-  background: #293244;
-  padding: 13px;
-  border-radius: 10px;
-  margin-top: 12px;
-  font-size: 13px;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-
-#retakeTool .rt-item label {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  cursor: pointer;
-}
-
-#retakeTool .rt-item input {
-  width: 19px;
-  height: 19px;
-  flex-shrink: 0;
-  margin-top: 3px;
-}
-
-#retakeTool .rt-muted {
-  color: #aaa;
-  font-size: 12px;
-}
-
-#retakeTool .rt-actions {
-  display: flex;
-  gap: 8px;
-}
-
-#retakeTool .rt-actions button {
-  flex: 1;
-}
-
-#retakeTool .rt-secondary {
-  background: #3478f6 !important;
-  color: white !important;
-}
-</style>
-
-<div id="retakeTool">
-
-  <h2>🧠 AI Retake Remover</h2>
-
-  <p class="rt-info">
-    Detect repeated sentences, failed retakes and
-    duplicate speech automatically using local AI.
-  </p>
-
-  <div class="rt-item">
-    <b>AI Model</b>
-    <p class="rt-muted">
-      Whisper Tiny Multilingual · Browser Processing
-    </p>
-    <button id="rtLoad">
-      Download / Load AI Model
-    </button>
-  </div>
-
-  <div class="rt-item">
-    <b>Detection Settings</b>
-
-    <p class="rt-muted">
-      Minimum matching words:
-    </p>
-
-    <select id="rtMinWords"
-      style="width:100%;padding:10px;background:#10131c;color:white;border-radius:7px;border:1px solid #555">
-
-      <option value="4">4 words (More sensitive)</option>
-      <option value="5" selected>5 words (Recommended)</option>
-      <option value="7">7 words (Fewer false matches)</option>
-      <option value="10">10 words (Strict)</option>
-
-    </select>
-
-    <p class="rt-muted">
-      Maximum time between repeated attempts:
-    </p>
-
-    <select id="rtMaxGap"
-      style="width:100%;padding:10px;background:#10131c;color:white;border-radius:7px;border:1px solid #555">
-
-      <option value="10">10 seconds</option>
-      <option value="20" selected>20 seconds</option>
-      <option value="30">30 seconds</option>
-      <option value="60">60 seconds</option>
-
-    </select>
-  </div>
-
-  <button id="rtDetect" disabled>
-    🔍 Detect Retakes & Duplicates
-  </button>
-
-  <p class="rt-status" id="rtStatus">
-    Please upload audio in the main Audio Editor first.
-  </p>
-
-  <div id="rtResults"></div>
-
-  <div class="rt-actions">
-    <button id="rtSelectAll" class="rt-secondary" disabled>
-      Select All
-    </button>
-
-    <button id="rtClear" class="rt-secondary" disabled>
-      Clear Selection
-    </button>
-  </div>
-
-  <button id="rtApply" disabled>
-    ✂️ Remove Selected & Keep Last Attempt
-  </button>
-
-  <p class="rt-info">
-    Important: Earlier repetitions will be removed.
-    The last detected attempt will be preserved.
-    Always review the suggestions before applying.
-  </p>
-
-</div>
-
-<script>
-(function () {
-
-"use strict";
-
+<script type="module">
 const $ = id => document.getElementById(id);
+const fileInput = $("audioFile");
+const mainAudio = $("mainAudio");
+const editedAudio = $("editedAudio");
+const previewAudio = $("previewAudio");
+const downloadBtn = $("downloadBtn");
 
-const loadButton = $("rtLoad");
-const detectButton = $("rtDetect");
-const applyButton = $("rtApply");
-
-const status = $("rtStatus");
-const results = $("rtResults");
-
-let recognizer = null;
-let detectedGroups = [];
-let audioSnapshot = null;
-
+let originalBuffer = null;
+let workingBuffer = null;
+let history = [];
+let originalURL = null;
+let workingURL = null;
+let previewURL = null;
+let model = null;
 let transformerModule = null;
+let detectedGroups = [];
+let detectionBufferRef = null;
 
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
-// ------------------------------------
-// 1. LOAD LOCAL WHISPER MODEL
-// ------------------------------------
+function setStatus(id, message){ $(id).textContent = message; }
 
-loadButton.addEventListener("click", async () => {
+function revoke(url){ if(url) URL.revokeObjectURL(url); }
 
-  try {
-
-    loadButton.disabled = true;
-
-    status.textContent =
-      "Loading Transformers.js...";
-
-    if (!transformerModule) {
-
-      transformerModule = await import(
-        "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1"
-      );
-
-    }
-
-    const { pipeline, env } = transformerModule;
-
-    env.allowLocalModels = false;
-    env.useBrowserCache = true;
-
-    status.textContent =
-      "Loading Whisper Tiny Multilingual...";
-
-    recognizer = await pipeline(
-      "automatic-speech-recognition",
-      "onnx-community/whisper-tiny",
-      {
-        dtype: "q8",
-
-        progress_callback: (p) => {
-
-          if (p.status === "progress") {
-
-            status.textContent =
-              "Downloading AI Model: " +
-              Math.round(p.progress || 0) + "%";
-
-          }
-
-          if (p.status === "ready") {
-
-            status.textContent =
-              "AI Model is ready!";
-
-          }
-
-        }
-      }
-    );
-
-    status.textContent =
-      "AI Model loaded successfully!";
-
-    loadButton.textContent =
-      "✓ AI Model Ready";
-
-    detectButton.disabled = false;
-
-  } catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      "Model loading failed: " + error.message;
-
-    loadButton.disabled = false;
-
+function updateUI(){
+  const ready = !!workingBuffer;
+  $("silenceBtn").disabled = !ready;
+  $("detectBtn").disabled = !ready || !model;
+  $("previewManualBtn").disabled = !ready;
+  $("applyManualBtn").disabled = !ready;
+  $("resetBtn").disabled = !originalBuffer || workingBuffer === originalBuffer;
+  $("undoBtn").disabled = history.length === 0;
+  if(ready){
+    $("manualEnd").max = workingBuffer.duration.toFixed(2);
+    if(Number($("manualEnd").value) <= 0) $("manualEnd").value = workingBuffer.duration.toFixed(2);
+    $("audioState").textContent = `Current working audio: ${workingBuffer.duration.toFixed(2)} sec. All new edits apply to this version.`;
   }
+}
 
+function pushHistory(label){
+  history.push({buffer: workingBuffer, label});
+  if(history.length > 12) history.shift();
+  updateUI();
+}
+
+function makeBufferFromRanges(source, ranges){
+  const sr = source.sampleRate;
+  const valid = ranges.map(r => ({
+    start: Math.max(0, Math.min(source.length, Math.floor(r.start * sr))),
+    end: Math.max(0, Math.min(source.length, Math.ceil(r.end * sr)))
+  })).filter(r => r.end > r.start);
+  const total = valid.reduce((s,r)=>s+r.end-r.start,0);
+  if(!total) throw new Error("No audio remains after this edit.");
+  const ctx = new AudioContextClass();
+  const out = ctx.createBuffer(source.numberOfChannels,total,sr);
+  for(let c=0;c<source.numberOfChannels;c++){
+    const src=source.getChannelData(c), dst=out.getChannelData(c);
+    let pos=0;
+    for(const r of valid){
+      const part=src.subarray(r.start,r.end);
+      dst.set(part,pos);
+      const fade=Math.min(Math.floor(sr*0.004),Math.floor(part.length/2));
+      for(let i=0;i<fade;i++){
+        const g=i/Math.max(1,fade);
+        dst[pos+i]*=g;
+        dst[pos+part.length-1-i]*=g;
+      }
+      pos+=part.length;
+    }
+  }
+  ctx.close();
+  return out;
+}
+
+function encodeWav(buffer){
+  const channels=buffer.numberOfChannels, sr=buffer.sampleRate, length=buffer.length;
+  const block=channels*2, bytes=44+length*block;
+  const ab=new ArrayBuffer(bytes), v=new DataView(ab);
+  const str=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  str(0,"RIFF");v.setUint32(4,bytes-8,true);str(8,"WAVE");str(12,"fmt ");
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*block,true);v.setUint16(32,block,true);v.setUint16(34,16,true);
+  str(36,"data");v.setUint32(40,length*block,true);
+  const data=Array.from({length:channels},(_,c)=>buffer.getChannelData(c));
+  let off=44;
+  for(let i=0;i<length;i++)for(let c=0;c<channels;c++){
+    const s=Math.max(-1,Math.min(1,data[c][i]));
+    v.setInt16(off,s<0?s*32768:s*32767,true);off+=2;
+  }
+  return new Blob([ab],{type:"audio/wav"});
+}
+
+function publishWorkingAudio(){
+  revoke(workingURL);
+  const blob=encodeWav(workingBuffer);
+  workingURL=URL.createObjectURL(blob);
+  editedAudio.src=workingURL;
+  mainAudio.src=workingURL;
+  downloadBtn.href=workingURL;
+  downloadBtn.download="AI_Audio_Cleaned.wav";
+  downloadBtn.style.display="block";
+  $("resultInfo").textContent=`Current edited duration: ${workingBuffer.duration.toFixed(2)} sec. Download includes every edit applied so far.`;
+  updateUI();
+}
+
+fileInput.addEventListener("change",async()=>{
+  const file=fileInput.files?.[0]; if(!file)return;
+  setStatus("silenceStatus","Decoding audio...");
+  $("fileName").textContent=`${file.name} (${(file.size/1048576).toFixed(2)} MB)`;
+  try{
+    revoke(originalURL);revoke(workingURL);revoke(previewURL);
+    const url=URL.createObjectURL(file);originalURL=url;mainAudio.src=url;
+    const bytes=await file.arrayBuffer();
+    const ctx=new AudioContextClass();
+    const decoded=await ctx.decodeAudioData(bytes);
+    await ctx.close();
+    originalBuffer=decoded;workingBuffer=decoded;history=[];
+    detectedGroups=[];$("retakeResults").innerHTML="";
+    $("resultInfo").textContent="Original audio loaded. No edits applied yet.";
+    $("downloadBtn").style.display="none";
+    editedAudio.removeAttribute("src");
+    setStatus("silenceStatus",`Audio ready: ${decoded.duration.toFixed(2)} seconds.`);
+    setStatus("retakeStatus",model?"Audio ready. Detect retakes when you want.":"Audio ready. Load the AI model to detect retakes.");
+    setStatus("manualStatus","You can preview or manually cut a range.");
+    $("manualStart").value="0";$("manualEnd").value=decoded.duration.toFixed(2);
+    updateUI();
+  }catch(e){
+    console.error(e);workingBuffer=null;originalBuffer=null;
+    setStatus("silenceStatus","Could not decode this file. Try WAV, MP3 or another browser-supported format.");
+    updateUI();
+  }
 });
 
+$("maxGap").oninput=()=> $("gapValue").textContent=Number($("maxGap").value).toFixed(2);
+$("threshold").oninput=()=> $("thresholdValue").textContent=$("threshold").value;
 
-// ------------------------------------
-// 2. CONVERT AUDIO TO MONO 16 KHZ
-// ------------------------------------
-
-async function prepareAudio(buffer, start, end) {
-
-  const rate = buffer.sampleRate;
-
-  const first = Math.floor(start * rate);
-
-  const last = Math.min(
-    buffer.length,
-    Math.ceil(end * rate)
-  );
-
-  const length = last - first;
-
-  const audioContext = new AudioContext();
-
-  const mono = audioContext.createBuffer(
-    1,
-    length,
-    rate
-  );
-
-  const output = mono.getChannelData(0);
-
-  for (
-    let channel = 0;
-    channel < buffer.numberOfChannels;
-    channel++
-  ) {
-
-    const input = buffer.getChannelData(channel);
-
-    for (let i = 0; i < length; i++) {
-
-      output[i] +=
-        input[first + i] / buffer.numberOfChannels;
-
+$("silenceBtn").addEventListener("click",async()=>{
+  if(!workingBuffer)return;
+  $("silenceBtn").disabled=true;
+  try{
+    const src=workingBuffer,sr=src.sampleRate,frame=Math.max(1,Math.round(sr*.01));
+    const count=Math.ceil(src.length/frame),limit=Math.pow(10,Number($("threshold").value)/20);
+    const maxFrames=Math.floor(Number($("maxGap").value)*sr/frame);
+    const data=Array.from({length:src.numberOfChannels},(_,c)=>src.getChannelData(c));
+    const keep=new Uint8Array(count);keep.fill(1);
+    let removed=0;
+    for(let f=0;f<count;f++){
+      let sum=0,n=0,start=f*frame,end=Math.min(src.length,start+frame);
+      for(let i=start;i<end;i++)for(let c=0;c<src.numberOfChannels;c++){const x=data[c][i];sum+=x*x;n++;}
+      const rms=Math.sqrt(sum/Math.max(1,n));
+      if(rms<limit)keep[f]=0;
     }
+    let f=0;
+    while(f<count){
+      if(keep[f]){f++;continue;}
+      const start=f;while(f<count&&!keep[f])f++;
+      if(f-start<=maxFrames){for(let j=start;j<f;j++)keep[j]=1;}
+      else{for(let j=start;j<start+maxFrames;j++)keep[j]=1;removed+=f-start-maxFrames;}
+    }
+    const ranges=[];let runStart=null;
+    for(let i=0;i<count;i++){
+      if(keep[i]&&runStart===null)runStart=i*frame;
+      if((!keep[i]||i===count-1)&&runStart!==null){
+        const end=keep[i]&&i===count-1?src.length:i*frame;
+        ranges.push({start:runStart/sr,end:end/sr});runStart=null;
+      }
+    }
+    const next=makeBufferFromRanges(src,ranges);
+    pushHistory("Silence removal");workingBuffer=next;publishWorkingAudio();
+    setStatus("silenceStatus",`Silence removal applied. Removed approximately ${(removed*frame/sr).toFixed(2)} sec. Previous edits were preserved.`);
+    setStatus("retakeStatus",model?"Working audio changed. Run detection again to analyze the latest edited audio.":"Load the AI model to detect retakes.");
+    detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
+  }catch(e){console.error(e);setStatus("silenceStatus","Error: "+e.message);}
+  finally{$("silenceBtn").disabled=false;updateUI();}
+});
 
+$("loadModelBtn").addEventListener("click",async()=>{
+  try{
+    $("loadModelBtn").disabled=true;setStatus("modelStatus","Loading Transformers.js...");
+    if(!transformerModule)transformerModule=await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1");
+    const {pipeline,env}=transformerModule;
+    env.allowLocalModels=false;env.useBrowserCache=true;
+    setStatus("modelStatus","Downloading/loading Whisper Tiny multilingual. First download may be large; keep this page open.");
+    model=await pipeline("automatic-speech-recognition","onnx-community/whisper-tiny",{dtype:"q8",progress_callback:p=>{
+      if(p.status==="progress")setStatus("modelStatus",`Downloading model: ${Math.round(p.progress||0)}%`);
+      else if(p.status==="ready")setStatus("modelStatus","Model files ready.");
+    }});
+    $("loadModelBtn").textContent="✓ AI Model Loaded";
+    setStatus("modelStatus","AI model loaded. Audio is processed in this browser.");
+    $("detectBtn").disabled=!workingBuffer;
+  }catch(e){
+    console.error(e);setStatus("modelStatus","Model loading failed: "+e.message);
+    $("loadModelBtn").disabled=false;
   }
+});
 
-  await audioContext.close();
-
-  const targetRate = 16000;
-
-  const offline = new OfflineAudioContext(
-    1,
-    Math.ceil(length * targetRate / rate),
-    targetRate
-  );
-
-  const source = offline.createBufferSource();
-
-  source.buffer = mono;
-
-  source.connect(offline.destination);
-
-  source.start(0);
-
-  const rendered = await offline.startRendering();
-
+async function toMono16k(buffer,start,end){
+  const sr=buffer.sampleRate,first=Math.max(0,Math.floor(start*sr)),last=Math.min(buffer.length,Math.ceil(end*sr));
+  const len=last-first;if(len<=0)throw new Error("Invalid audio chunk.");
+  const monoCtx=new AudioContextClass();
+  const mono=monoCtx.createBuffer(1,len,sr),out=mono.getChannelData(0);
+  for(let c=0;c<buffer.numberOfChannels;c++){
+    const ch=buffer.getChannelData(c);
+    for(let i=0;i<len;i++)out[i]+=ch[first+i]/buffer.numberOfChannels;
+  }
+  await monoCtx.close();
+  const target=16000;
+  const offline=new OfflineAudioContext(1,Math.ceil(len*target/sr),target);
+  const source=offline.createBufferSource();source.buffer=mono;source.connect(offline.destination);source.start();
+  const rendered=await offline.startRendering();
   return rendered.getChannelData(0);
-
 }
 
+function norm(s){return s.toLocaleLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}]/gu,"");}
 
-// ------------------------------------
-// 3. TEXT NORMALIZATION
-// ------------------------------------
-
-function normalizeText(text) {
-
-  return text
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/[^\p{L}\p{N}]/gu, "")
-    .trim();
-
+async function transcribe(buffer){
+  const words=[],duration=buffer.duration,chunkSize=18,overlap=2,step=chunkSize-overlap;
+  const total=Math.ceil(duration/step);
+  for(let start=0,index=0;start<duration;start+=step,index++){
+    const end=Math.min(duration,start+chunkSize);
+    setStatus("retakeStatus",`Transcribing current edited audio: chunk ${index+1}/${total} (${Math.round(end/duration*100)}%). Keep the page open.`);
+    const audio=await toMono16k(buffer,start,end);
+    const result=await model(audio,{return_timestamps:true,task:"transcribe"});
+    const segments=result.chunks||[];
+    const chunks=segments.length?segments:(result.text?[{text:result.text,timestamp:[0,end-start]}]:[]);
+    for(const seg of chunks){
+      if(!seg.text)continue;
+      let a=seg.timestamp?.[0],b=seg.timestamp?.[1];
+      if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a){a=0;b=end-start;}
+      const tokens=seg.text.match(/\S+/gu)||[];
+      if(!tokens.length)continue;
+      // Whisper segment timestamps do not provide exact word boundaries.
+      // Equal word spacing is an estimate for review, never an exact alignment.
+      const span=b-a;
+      for(let i=0;i<tokens.length;i++){
+        const n=norm(tokens[i]);if(!n)continue;
+        const ws=start+a+span*i/tokens.length,we=start+a+span*(i+1)/tokens.length;
+        const prev=words.slice(-30).some(w=>w.normal===n&&Math.abs(w.start-ws)<.45);
+        if(!prev)words.push({text:tokens[i],normal:n,start:ws,end:we,estimated:true});
+      }
+    }
+    await new Promise(r=>setTimeout(r,20));
+  }
+  words.sort((a,b)=>a.start-b.start);return words;
 }
 
-
-// ------------------------------------
-// 4. TRANSCRIBE COMPLETE RECORDING
-// ------------------------------------
-
-
-// ==========================================
-// LONG AUDIO TRANSCRIPTION ENGINE
-// Segment timestamps - NO cross attention
-// Sequential processing for mobile devices
-// ==========================================
-
-async function transcribe(buffer) {
-
-  const allWords = [];
-
-  const duration = buffer.duration;
-
-  // Small chunks reduce temporary memory pressure.
-  const chunkSize = 20;
-  const overlap = 2;
-  const step = chunkSize - overlap;
-
-  const total = Math.ceil(
-    Math.max(0, duration - overlap) / step
-  );
-
-  for (
-    let start = 0, index = 0;
-    start < duration;
-    start += step, index++
-  ) {
-
-    const end = Math.min(
-      duration,
-      start + chunkSize
-    );
-
-    status.textContent =
-      "AI Processing: " +
-      (index + 1) + " / " + total +
-      " sections (" +
-      Math.round(end / duration * 100) +
-      "%)\nPlease keep this page open.";
-
-    // Prepare only the current audio section.
-    const audio = await prepareAudio(
-      buffer,
-      start,
-      end
-    );
-
-    // IMPORTANT:
-    // true = segment timestamps
-    // "word" = cross-attention word timestamps
-    // We intentionally use true.
-
-    const result = await recognizer(
-      audio,
-      {
-        return_timestamps: true,
-        task: "transcribe"
-      }
-    );
-
-    let segments = result.chunks || [];
-
-    // Fallback if model returns text without chunks.
-    if (!segments.length && result.text) {
-
-      segments = [{
-        text: result.text,
-        timestamp: [0, end - start]
-      }];
-
+function detectRepeated(words){
+  const min=Number($("minWords").value),maxGap=Number($("maxRetakeGap").value);
+  const map=new Map(),groups=new Map();
+  for(let i=0;i<=words.length-min;i++){
+    const key=words.slice(i,i+min).map(w=>w.normal).join("|");
+    if(!key)continue;
+    const prior=map.get(key)||[];
+    for(const j of prior){
+      const gap=words[i].start-words[j+min-1].end;
+      if(gap<0||gap>maxGap)continue;
+      let a=i,b=j;
+      while(a>0&&b>0&&words[a-1].normal===words[b-1].normal){a--;b--;}
+      let len=0;
+      while(a+len<words.length&&b+len<words.length&&words[a+len].normal===words[b+len].normal)len++;
+      if(len<min)continue;
+      const occ=[{start:words[b].start,end:words[b+len-1].end},{start:words[a].start,end:words[a+len-1].end}];
+      const signature=words.slice(b,b+len).map(w=>w.normal).join("|");
+      if(!groups.has(signature))groups.set(signature,{text:words.slice(b,b+len).map(w=>w.text).join(" "),occurrences:[]});
+      const g=groups.get(signature);
+      for(const o of occ)if(!g.occurrences.some(x=>Math.abs(x.start-o.start)<.7))g.occurrences.push(o);
     }
-
-    for (const segment of segments) {
-
-      if (!segment.text) continue;
-
-      let localStart = segment.timestamp?.[0];
-      let localEnd = segment.timestamp?.[1];
-
-      if (
-        !Number.isFinite(localStart) ||
-        !Number.isFinite(localEnd) ||
-        localEnd <= localStart
-      ) {
-
-        localStart = 0;
-        localEnd = end - start;
-
-      }
-
-      // Split recognized segment into words.
-      // Their timestamps are approximate, not exact.
-      const tokens = segment.text.match(/\S+/gu) || [];
-
-      if (!tokens.length) continue;
-
-      const segmentDuration =
-        localEnd - localStart;
-
-      const tokenDuration =
-        segmentDuration / tokens.length;
-
-      for (let t = 0; t < tokens.length; t++) {
-
-        const text = tokens[t];
-
-        const normal = normalizeText(text);
-
-        if (!normal) continue;
-
-        const wordStart =
-          start + localStart + t * tokenDuration;
-
-        const wordEnd =
-          start + localStart +
-          (t + 1) * tokenDuration;
-
-        const word = {
-          text,
-          normal,
-          start: wordStart,
-          end: wordEnd
-        };
-
-        // Remove duplicate words caused by overlap.
-        // Check only recent words to avoid O(n²) processing.
-
-        let duplicate = false;
-
-        for (
-          let k = allWords.length - 1;
-          k >= Math.max(0, allWords.length - 100);
-          k--
-        ) {
-
-          const old = allWords[k];
-
-          if (wordStart - old.start > 1.5) break;
-
-          if (
-            old.normal === word.normal &&
-            Math.abs(old.start - wordStart) < 0.40
-          ) {
-
-            duplicate = true;
-            break;
-
-          }
-
-        }
-
-        if (!duplicate) {
-          allWords.push(word);
-        }
-
-      }
-
-    }
-
-    // Release temporary reference before next section.
-    // Give the phone time to update the interface.
-
-    await new Promise(resolve =>
-      setTimeout(resolve, 30)
-    );
-
+    prior.push(i);map.set(key,prior);
   }
-
-  allWords.sort(
-    (a, b) => a.start - b.start
-  );
-
-  return allWords;
-
+  const arr=[...groups.values()].filter(g=>g.occurrences.length>1);
+  arr.forEach(g=>g.occurrences.sort((a,b)=>a.start-b.start));
+  arr.sort((a,b)=>(b.text.length-a.text.length));
+  const chosen=[];
+  for(const g of arr){
+    const duplicate=chosen.some(x=>x.occurrences.length===g.occurrences.length&&x.occurrences.every((o,i)=>Math.abs(o.start-g.occurrences[i].start)<1.0));
+    if(!duplicate)chosen.push(g);
+  }
+  return chosen;
 }
 
-
-
-// ------------------------------------
-// 5. FIND REPEATED SPEECH
-// ------------------------------------
-
-function detectRepeated(words) {
-
-  const minimum = Number($("rtMinWords").value);
-
-  const maximumGap = Number($("rtMaxGap").value);
-
-  const seedLength = minimum;
-
-  const seedMap = new Map();
-
-  const groups = new Map();
-
-  for (
-    let i = 0;
-    i <= words.length - seedLength;
-    i++
-  ) {
-
-    const seed = words
-      .slice(i, i + seedLength)
-      .map(w => w.normal)
-      .join("|");
-
-    if (!seed) continue;
-
-    const previous = seedMap.get(seed) || [];
-
-    for (const j of previous) {
-
-      if (i <= j) continue;
-
-      const gap = words[i].start - words[j].end;
-
-      if (gap < 0 || gap > maximumGap) continue;
-
-      let leftI = i;
-      let leftJ = j;
-
-      // Extend matching phrase backwards.
-
-      while (
-        leftI > 0 &&
-        leftJ > 0 &&
-        words[leftI - 1].normal ===
-        words[leftJ - 1].normal
-      ) {
-
-        leftI--;
-        leftJ--;
-
-      }
-
-      let count = 0;
-
-      // Extend matching phrase forwards.
-
-      while (
-
-        leftI + count < words.length &&
-        leftJ + count < words.length &&
-        words[leftI + count].normal ===
-        words[leftJ + count].normal
-
-      ) {
-
-        count++;
-
-      }
-
-      if (count < minimum) continue;
-
-      const first = words.slice(
-        leftJ,
-        leftJ + count
-      );
-
-      const second = words.slice(
-        leftI,
-        leftI + count
-      );
-
-      const signature = first
-        .map(w => w.normal)
-        .join("|");
-
-      if (!groups.has(signature)) {
-
-        groups.set(signature, {
-          text: first.map(w => w.text).join(" "),
-          occurrences: []
-        });
-
-      }
-
-      const group = groups.get(signature);
-
-      const occurrences = [
-        {
-          start: first[0].start,
-          end: first[first.length - 1].end
-        },
-        {
-          start: second[0].start,
-          end: second[second.length - 1].end
-        }
-      ];
-
-      for (const occurrence of occurrences) {
-
-        const exists = group.occurrences.some(old =>
-
-          Math.abs(old.start - occurrence.start) < 0.40
-
-        );
-
-        if (!exists) {
-          group.occurrences.push(occurrence);
-        }
-
-      }
-
-    }
-
-    previous.push(i);
-
-    seedMap.set(seed, previous);
-
-  }
-
-
-  // Prepare groups with multiple attempts.
-
-  let output = [];
-
-  for (const group of groups.values()) {
-
-    group.occurrences.sort(
-      (a, b) => a.start - b.start
-    );
-
-    if (group.occurrences.length < 2) continue;
-
-    output.push({
-
-      text: group.text,
-
-      occurrences: group.occurrences,
-
-      // Keep LAST attempt.
-      // Cut every previous attempt.
-
-      cuts: group.occurrences.slice(0, -1)
-
-    });
-
-  }
-
-
-  // Prefer the longest matching phrase.
-  // Remove overlapping duplicate suggestions.
-
-  output.sort((a, b) => {
-
-    const durationA =
-      a.occurrences[0].end -
-      a.occurrences[0].start;
-
-    const durationB =
-      b.occurrences[0].end -
-      b.occurrences[0].start;
-
-    return durationB - durationA;
-
-  });
-
-  const finalGroups = [];
-
-  for (const group of output) {
-
-    const overlaps = finalGroups.some(existing => {
-
-      if (
-        existing.occurrences.length !==
-        group.occurrences.length
-      ) return false;
-
-      return existing.occurrences.every((old, i) => {
-
-        const current = group.occurrences[i];
-
-        return (
-          Math.abs(old.start - current.start) < 0.50 &&
-          Math.abs(old.end - current.end) < 1.0
-        );
-
+function makePreviewBlob(buffer,start,end){
+  const s=Math.max(0,start),e=Math.min(buffer.duration,end);
+  if(e<=s)throw new Error("Preview end must be after start.");
+  const ranges=[{start:s,end:e}];
+  const clip=makeBufferFromRanges(buffer,ranges);
+  return encodeWav(clip);
+}
+
+function renderResults(){
+  const root=$("retakeResults");root.innerHTML="";
+  if(!detectedGroups.length){root.textContent="No repeated speech detected. This does not guarantee that every retake was found.";return;}
+  detectedGroups.forEach((g,idx)=>{
+    const box=document.createElement("div");box.className="item";
+    const top=document.createElement("div");top.className="row";
+    const check=document.createElement("input");check.type="checkbox";check.className="rtcheckbox";check.dataset.index=idx;check.checked=false;
+    const title=document.createElement("b");title.textContent=`Suggestion #${idx+1} · ${g.occurrences.length} matching attempts`;
+    top.append(check,title);box.append(top);
+    const sentence=document.createElement("p");sentence.textContent=`Recognized repeated text: “${g.text}”`;box.append(sentence);
+    const hint=document.createElement("p");hint.className="info";hint.textContent="Earlier attempts are proposed for removal; the last attempt is kept. Times are approximate—listen and adjust.";box.append(hint);
+    g.occurrences.forEach((o,oi)=>{
+      const attempt=document.createElement("div");attempt.className="item";
+      const label=document.createElement("b");label.textContent=oi===g.occurrences.length-1?`Attempt ${oi+1} (LAST — keep by default)`:`Attempt ${oi+1} (proposed cut)`;attempt.append(label);
+      const grid=document.createElement("div");grid.className="timegrid";
+      const st=document.createElement("div"),en=document.createElement("div");
+      const sl=document.createElement("label");sl.textContent="Start seconds";
+      const el=document.createElement("label");el.textContent="End seconds";
+      const si=document.createElement("input");si.type="number";si.step=".01";si.min="0";si.value=o.start.toFixed(2);
+      const ei=document.createElement("input");ei.type="number";ei.step=".01";ei.min="0";ei.value=o.end.toFixed(2);
+      si.addEventListener("change",()=>{o.start=Math.max(0,Number(si.value)||0);});
+      ei.addEventListener("change",()=>{o.end=Math.max(0,Number(ei.value)||0);});
+      st.append(sl,si);en.append(el,ei);grid.append(st,en);attempt.append(grid);
+      const listen=document.createElement("button");listen.className="secondary smallbtn";listen.textContent="▶ Listen to this attempt";
+      listen.addEventListener("click",()=>{
+        try{
+          const blob=makePreviewBlob(workingBuffer,Math.max(0,o.start-1.5),Math.min(workingBuffer.duration,o.end+1.5));
+          revoke(previewURL);previewURL=URL.createObjectURL(blob);previewAudio.src=previewURL;previewAudio.play();
+        }catch(e){alert(e.message);}
       });
-
+      attempt.append(listen);
+      if(oi<g.occurrences.length-1){
+        const use=document.createElement("button");use.className="danger smallbtn";use.textContent="Mark this attempt as cut range";
+        use.addEventListener("click",()=>{check.checked=true;});
+        attempt.append(use);
+      }
+      box.append(attempt);
     });
-
-    if (!overlaps) {
-      finalGroups.push(group);
-    }
-
-  }
-
-  return finalGroups;
-
+    root.append(box);
+  });
+  $("selectAllBtn").disabled=false;$("clearAllBtn").disabled=false;$("applyRetakesBtn").disabled=false;
 }
 
-
-// ------------------------------------
-// 6. DETECT BUTTON
-// ------------------------------------
-
-detectButton.addEventListener("click", async () => {
-
-  try {
-
-    if (!recognizer) {
-
-      throw new Error("Load the AI Model first.");
-
-    }
-
-    if (
-      typeof audioBuffer === "undefined" ||
-      !audioBuffer
-    ) {
-
-      throw new Error(
-        "Upload audio in the main editor first."
-      );
-
-    }
-
-    audioSnapshot = audioBuffer;
-
-    detectButton.disabled = true;
-    applyButton.disabled = true;
-
-    results.innerHTML = "";
-
-    detectedGroups = [];
-
-    status.textContent =
-      "Starting AI speech recognition...";
-
-    const words = await transcribe(audioSnapshot);
-
-    if (!words.length) {
-
-      throw new Error(
-        "No speech was detected."
-      );
-
-    }
-
-    status.textContent =
-      "Searching for repeated sentences...";
-
-    detectedGroups = detectRepeated(words);
-
-    showResults();
-
-    status.textContent =
-      "Analysis complete! Found " +
-      detectedGroups.length +
-      " possible repeated sections.";
-
-  } catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      "Error: " + error.message;
-
-  } finally {
-
-    detectButton.disabled = false;
-
-  }
-
+$("detectBtn").addEventListener("click",async()=>{
+  if(!model||!workingBuffer)return;
+  $("detectBtn").disabled=true;$("applyRetakesBtn").disabled=true;
+  try{
+    const analyzed=workingBuffer;
+    setStatus("retakeStatus","Starting transcription of the current edited audio...");
+    const words=await transcribe(analyzed);
+    if(workingBuffer!==analyzed)throw new Error("Audio changed during detection. Please detect again.");
+    if(!words.length)throw new Error("No speech was recognized.");
+    detectedGroups=detectRepeated(words);detectionBufferRef=workingBuffer;renderResults();
+    setStatus("retakeStatus",`Analysis complete. Found ${detectedGroups.length} possible repeated sections. Review and listen before applying.`);
+  }catch(e){console.error(e);setStatus("retakeStatus","Detection error: "+e.message);}
+  finally{$("detectBtn").disabled=!workingBuffer||!model;}
 });
 
-
-// ------------------------------------
-// 7. SHOW DETECTED RESULTS
-// ------------------------------------
-
-function showResults() {
-
-  results.innerHTML = "";
-
-  if (!detectedGroups.length) {
-
-    results.textContent =
-      "No repeated speech detected.";
-
-    return;
-
-  }
-
-  detectedGroups.forEach((group, index) => {
-
-    const div = document.createElement("div");
-
-    div.className = "rt-item";
-
-    const label = document.createElement("label");
-
-    const checkbox = document.createElement("input");
-
-    checkbox.type = "checkbox";
-
-    checkbox.dataset.index = index;
-
-    const content = document.createElement("span");
-
-    const cutList = group.cuts.map(c =>
-
-      c.start.toFixed(2) + "s – " +
-      c.end.toFixed(2) + "s"
-
-    ).join("\n");
-
-    content.textContent =
-
-      "Repeated Speech #" + (index + 1) +
-
-      "\nTotal attempts: " +
-      group.occurrences.length +
-
-      "\nAttempts to remove: " +
-      group.cuts.length +
-
-      "\nAttempt to keep: LAST ONE" +
-
-      "\n\nSentence: " + group.text +
-
-      "\n\nEarlier attempts to cut:\n" + cutList +
-
-      "\n\nLast attempt starts at: " +
-      group.occurrences[
-        group.occurrences.length - 1
-      ].start.toFixed(2) + "s";
-
-    label.appendChild(checkbox);
-
-    label.appendChild(content);
-
-    div.appendChild(label);
-
-    results.appendChild(div);
-
-  });
-
-  $("rtSelectAll").disabled = false;
-
-  $("rtClear").disabled = false;
-
-  applyButton.disabled = false;
-
-}
-
-
-// ------------------------------------
-// 8. SELECT ALL / CLEAR
-// ------------------------------------
-
-$("rtSelectAll").onclick = () => {
-
-  results.querySelectorAll(
-    'input[type="checkbox"]'
-  ).forEach(box => box.checked = true);
-
-};
-
-$("rtClear").onclick = () => {
-
-  results.querySelectorAll(
-    'input[type="checkbox"]'
-  ).forEach(box => box.checked = false);
-
-};
-
-
-// ------------------------------------
-// 9. WAV EXPORT
-// ------------------------------------
-
-function encodeWav(buffer) {
-
-  const channels = buffer.numberOfChannels;
-
-  const rate = buffer.sampleRate;
-
-  const length = buffer.length;
-
-  const block = channels * 2;
-
-  const bytes = 44 + length * block;
-
-  const array = new ArrayBuffer(bytes);
-
-  const view = new DataView(array);
-
-  function writeString(offset, string) {
-
-    for (let i = 0; i < string.length; i++) {
-
-      view.setUint8(
-        offset + i,
-        string.charCodeAt(i)
-      );
-
-    }
-
-  }
-
-  writeString(0, "RIFF");
-
-  view.setUint32(4, bytes - 8, true);
-
-  writeString(8, "WAVE");
-
-  writeString(12, "fmt ");
-
-  view.setUint32(16, 16, true);
-
-  view.setUint16(20, 1, true);
-
-  view.setUint16(22, channels, true);
-
-  view.setUint32(24, rate, true);
-
-  view.setUint32(28, rate * block, true);
-
-  view.setUint16(32, block, true);
-
-  view.setUint16(34, 16, true);
-
-  writeString(36, "data");
-
-  view.setUint32(40, length * block, true);
-
-  let offset = 44;
-
-  const data = [];
-
-  for (let c = 0; c < channels; c++) {
-
-    data.push(buffer.getChannelData(c));
-
-  }
-
-  for (let i = 0; i < length; i++) {
-
-    for (let c = 0; c < channels; c++) {
-
-      let sample = Math.max(
-        -1,
-        Math.min(1, data[c][i])
-      );
-
-      view.setInt16(
-        offset,
-        sample < 0
-          ? sample * 32768
-          : sample * 32767,
-        true
-      );
-
-      offset += 2;
-
-    }
-
-  }
-
-  return new Blob(
-    [array],
-    { type: "audio/wav" }
-  );
-
-}
-
-
-// ------------------------------------
-// 10. APPLY SELECTED CUTS
-// ------------------------------------
-
-applyButton.addEventListener("click", async () => {
-
-  try {
-
-    const selected = [
-      ...results.querySelectorAll(
-        'input[type="checkbox"]:checked'
-      )
-    ];
-
-    if (!selected.length) {
-
-      alert("Please select at least one result.");
-
-      return;
-
-    }
-
-    if (audioBuffer !== audioSnapshot) {
-
-      throw new Error(
-        "Audio has changed. Please detect again."
-      );
-
-    }
-
-    applyButton.disabled = true;
-
-    status.textContent =
-      "Preparing selected audio cuts...";
-
-    let cuts = selected.flatMap(box => {
-
-      const group =
-        detectedGroups[Number(box.dataset.index)];
-
-      return group.cuts;
-
+$("selectAllBtn").onclick=()=>document.querySelectorAll("#retakeResults input[type=checkbox]").forEach(x=>x.checked=true);
+$("clearAllBtn").onclick=()=>document.querySelectorAll("#retakeResults input[type=checkbox]").forEach(x=>x.checked=false);
+
+$("applyRetakesBtn").addEventListener("click",()=>{
+  try{
+    if(workingBuffer!==detectionBufferRef)throw new Error("The working audio changed after detection. Please detect again.");
+    const selected=[...document.querySelectorAll("#retakeResults input[type=checkbox]:checked")];
+    if(!selected.length)throw new Error("Select at least one suggestion.");
+    let cuts=selected.flatMap(el=>{
+      const g=detectedGroups[Number(el.dataset.index)];
+      return g.occurrences.slice(0,-1).map(o=>({start:o.start,end:o.end}));
     });
-
-    // Sort cuts and merge overlaps.
-
-    cuts.sort((a, b) => a.start - b.start);
-
-    const merged = [];
-
-    for (const cut of cuts) {
-
-      const start = Math.max(0, cut.start);
-
-      const end = Math.min(
-        audioSnapshot.duration,
-        cut.end
-      );
-
-      if (end <= start) continue;
-
-      const last = merged[merged.length - 1];
-
-      if (last && start <= last.end) {
-
-        last.end = Math.max(last.end, end);
-
-      } else {
-
-        merged.push({ start, end });
-
-      }
-
-    }
-
-    if (!merged.length) {
-
-      throw new Error("No valid cuts found.");
-
-    }
-
-    // Build sections that must be preserved.
-
-    const ranges = [];
-
-    let position = 0;
-
-    for (const cut of merged) {
-
-      if (cut.start > position) {
-
-        ranges.push({
-          start: position,
-          end: cut.start
-        });
-
-      }
-
-      position = Math.max(position, cut.end);
-
-    }
-
-    if (position < audioSnapshot.duration) {
-
-      ranges.push({
-        start: position,
-        end: audioSnapshot.duration
-      });
-
-    }
-
-    const sampleRate = audioSnapshot.sampleRate;
-
-    const totalSamples = audioSnapshot.length;
-
-    const sampleRanges = ranges.map(r => ({
-
-      start: Math.max(
-        0,
-        Math.floor(r.start * sampleRate)
-      ),
-
-      end: Math.min(
-        totalSamples,
-        Math.ceil(r.end * sampleRate)
-      )
-
-    }));
-
-    const outputLength = sampleRanges.reduce(
-      (sum, r) => sum + r.end - r.start,
-      0
-    );
-
-    if (!outputLength) {
-
-      throw new Error("No audio remains.");
-
-    }
-
-    const context = new AudioContext();
-
-    const output = context.createBuffer(
-      audioSnapshot.numberOfChannels,
-      outputLength,
-      sampleRate
-    );
-
-    // Copy original voice without changing pitch.
-
-    for (
-      let c = 0;
-      c < audioSnapshot.numberOfChannels;
-      c++
-    ) {
-
-      const source =
-        audioSnapshot.getChannelData(c);
-
-      const destination =
-        output.getChannelData(c);
-
-      let writePosition = 0;
-
-      for (const range of sampleRanges) {
-
-        const part = source.slice(
-          range.start,
-          range.end
-        );
-
-        destination.set(part, writePosition);
-
-        // Small fades to reduce clicks at cut boundaries.
-
-        const fade = Math.min(
-          Math.floor(sampleRate * 0.005),
-          Math.floor(part.length / 2)
-        );
-
-        for (let i = 0; i < fade; i++) {
-
-          const gain = i / fade;
-
-          destination[writePosition + i] *= gain;
-
-          destination[
-            writePosition + part.length - 1 - i
-          ] *= gain;
-
-        }
-
-        writePosition += part.length;
-
-      }
-
-    }
-
-    await context.close();
-
-    // Replace main editor audio buffer.
-
-    audioBuffer = output;
-
-    const blob = encodeWav(output);
-
-    if (typeof editedURL !== "undefined" && editedURL) {
-
-      URL.revokeObjectURL(editedURL);
-
-    }
-
-    editedURL = URL.createObjectURL(blob);
-
-    editedAudio.src = editedURL;
-
-    downloadBtn.href = editedURL;
-
-    downloadBtn.download = "Retake_Cleaned.wav";
-
-    downloadBtn.style.display = "block";
-
-    if (
-      typeof resultInfo !== "undefined" &&
-      resultInfo
-    ) {
-
-      resultInfo.textContent =
-        "Retake removal completed successfully.";
-
-    }
-
-    const removed = merged.reduce(
-      (sum, r) => sum + r.end - r.start,
-      0
-    );
-
-    status.textContent =
-      "Success! Removed " +
-      removed.toFixed(2) +
-      " seconds of repeated speech.";
-
-    // Reset previous detection results.
-
-    detectedGroups = [];
-
-    results.innerHTML = "";
-
-    applyButton.disabled = true;
-
-    $("rtSelectAll").disabled = true;
-
-    $("rtClear").disabled = true;
-
-    audioSnapshot = output;
-
-  } catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      "Editing failed: " + error.message;
-
-  } finally {
-
-    applyButton.disabled = false;
-
-  }
-
+    cuts=cuts.map(c=>({start:Math.max(0,c.start),end:Math.min(workingBuffer.duration,c.end)})).filter(c=>c.end>c.start).sort((a,b)=>a.start-b.start);
+    const merged=[];
+    for(const c of cuts){const last=merged[merged.length-1];if(last&&c.start<=last.end)last.end=Math.max(last.end,c.end);else merged.push({...c});}
+    const ranges=[];let pos=0;
+    for(const c of merged){if(c.start>pos)ranges.push({start:pos,end:c.start});pos=Math.max(pos,c.end);}
+    if(pos<workingBuffer.duration)ranges.push({start:pos,end:workingBuffer.duration});
+    if(!ranges.length)throw new Error("The selected cuts would remove the entire audio.");
+    const next=makeBufferFromRanges(workingBuffer,ranges);
+    pushHistory("Retake removal");workingBuffer=next;publishWorkingAudio();
+    const seconds=merged.reduce((s,c)=>s+c.end-c.start,0);
+    setStatus("retakeStatus",`Retake removal applied. Removed ${seconds.toFixed(2)} sec. All earlier silence edits were preserved.`);
+    detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
+  }catch(e){console.error(e);setStatus("retakeStatus","Could not apply cuts: "+e.message);}
 });
 
+$("previewManualBtn").onclick=()=>{
+  try{
+    const s=Number($("manualStart").value),e=Number($("manualEnd").value);
+    const blob=makePreviewBlob(workingBuffer,Math.max(0,s-2),Math.min(workingBuffer.duration,e+2));
+    revoke(previewURL);previewURL=URL.createObjectURL(blob);previewAudio.src=previewURL;previewAudio.play();
+    setStatus("manualStatus","Playing selected range with 2 seconds of surrounding context (where available).");
+  }catch(e){setStatus("manualStatus",e.message);}
+};
 
-// ------------------------------------
-// 11. CHECK MAIN EDITOR AUDIO
-// ------------------------------------
+$("applyManualBtn").onclick=()=>{
+  try{
+    const s=Number($("manualStart").value),e=Number($("manualEnd").value);
+    if(!Number.isFinite(s)||!Number.isFinite(e)||s<0||e>workingBuffer.duration||e<=s)throw new Error("Enter a valid start and end time within the current audio duration.");
+    const next=makeBufferFromRanges(workingBuffer,[{start:0,end:s},{start:e,end:workingBuffer.duration}]);
+    pushHistory("Manual cut");workingBuffer=next;publishWorkingAudio();
+    detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
+    setStatus("manualStatus",`Cut ${s.toFixed(2)}s–${e.toFixed(2)}s. Earlier edits remain applied. Update times before another cut.`);
+    $("manualStart").value="0";$("manualEnd").value=workingBuffer.duration.toFixed(2);
+  }catch(e){setStatus("manualStatus","Cut failed: "+e.message);}
+};
 
-if (
-  typeof audioBuffer !== "undefined" &&
-  audioBuffer
-) {
+$("undoBtn").onclick=()=>{
+  if(!history.length)return;
+  const previous=history.pop();workingBuffer=previous.buffer;publishWorkingAudio();
+  setStatus("silenceStatus",`Undo completed: ${previous.label} was undone. Other earlier edits remain.`);
+  detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
+  setStatus("retakeStatus","Audio changed. Run detection again before applying retake suggestions.");
+};
 
-  status.textContent =
-    "Audio detected. Load the AI Model to begin.";
+$("resetBtn").onclick=()=>{
+  if(!originalBuffer)return;
+  if(!confirm("Reset all edits and return to the original uploaded audio?"))return;
+  workingBuffer=originalBuffer;history=[];publishWorkingAudio();
+  detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
+  setStatus("silenceStatus","All edits reset to original upload.");
+  setStatus("retakeStatus","Run detection again if you want to analyze the original audio.");
+};
 
-}
-
-})();
+updateUI();
 </script>
-
-<!-- END AI RETAKE REMOVER -->
-
 </body>
 </html>
