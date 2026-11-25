@@ -33,6 +33,12 @@ audio{width:100%;margin-top:10px}
 .rtcheckbox{width:20px;height:20px;flex-shrink:0}
 .note{background:#332d20;border-left:3px solid #e7b44b;padding:10px;border-radius:6px;color:#e9d6a6;font-size:12px;line-height:1.5}
 .good{color:#55e6a5}
+#waveCanvas{width:800px;max-width:none;cursor:crosshair;touch-action:pan-y}
+.cut-row{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;background:#202a3b;padding:10px;border-radius:9px;margin-top:9px}
+.cut-row.active{outline:2px solid #ffb347;background:#30394c}
+.cut-row input[type=checkbox]{width:21px;height:21px}
+.cut-row button{margin:0;padding:9px;font-size:12px}
+.attempt-meta{font-size:12px;color:#aeb8c8;line-height:1.5}
 </style>
 </head>
 <body>
@@ -73,12 +79,14 @@ audio{width:100%;margin-top:10px}
 <b>Detection Settings</b>
 <label class="info">Minimum matching words</label>
 <select id="minWords">
-<option value="4">4 words (more sensitive)</option>
-<option value="5" selected>5 words (recommended)</option>
-<option value="7">7 words</option>
-<option value="10">10 words (strict)</option>
+<option value="2">2 words (very sensitive)</option>
+<option value="3" selected>3 words (sensitive)</option>
+<option value="4">4 words</option>
+<option value="5">5 words (strict)</option>
+<option value="7">7 words (very strict)</option>
 </select>
 <label class="info">Maximum time between attempts</label>
+<p class="info">This is the maximum time gap between two matching phrases for grouping them as the same retake. It is NOT the silence length to remove.</p>
 <select id="maxRetakeGap">
 <option value="10">10 seconds</option>
 <option value="20" selected>20 seconds</option>
@@ -88,6 +96,20 @@ audio{width:100%;margin-top:10px}
 </div>
 <button id="detectBtn" disabled>🔍 Detect Retakes & Duplicates</button>
 <p id="retakeStatus" class="status">Upload audio, then load the model.</p>
+<div class="item" id="timelinePanel">
+  <b>🎚️ Audio Timeline — drag the orange handles to adjust a cut</b>
+  <p class="info">Tap a detected attempt below to focus it. Drag the left/right handles on the waveform to shorten or extend the selected cut. Pinch zoom is not required; use the zoom slider.</p>
+  <label class="info">Timeline zoom: <span id="zoomLabel">8</span> px/sec</label>
+  <input type="range" id="timelineZoom" min="2" max="20" value="8" step="1">
+  <div id="waveScroll" style="overflow-x:auto;overflow-y:hidden;background:#111722;border:1px solid #4a5365;border-radius:8px;touch-action:pan-y">
+    <canvas id="waveCanvas" width="800" height="180" style="display:block;height:180px"></canvas>
+  </div>
+  <div class="timegrid" style="margin-top:10px">
+    <div><label>Cut start (sec)</label><input type="number" id="cutStart" min="0" step="0.01"></div>
+    <div><label>Cut end (sec)</label><input type="number" id="cutEnd" min="0" step="0.01"></div>
+  </div>
+  <p class="info" id="activeCutInfo">No cut range selected. Select an AI suggestion below.</p>
+</div>
 <div id="retakeResults"></div>
 <div class="row">
 <button id="selectAllBtn" class="secondary" disabled>Select All</button>
@@ -223,6 +245,7 @@ function publishWorkingAudio(){
   downloadBtn.style.display="block";
   $("resultInfo").textContent=`Current edited duration: ${workingBuffer.duration.toFixed(2)} sec. Download includes every edit applied so far.`;
   updateUI();
+  drawTimeline();
 }
 
 fileInput.addEventListener("change",async()=>{
@@ -245,7 +268,7 @@ fileInput.addEventListener("change",async()=>{
     setStatus("retakeStatus",model?"Audio ready. Detect retakes when you want.":"Audio ready. Load the AI model to detect retakes.");
     setStatus("manualStatus","You can preview or manually cut a range.");
     $("manualStart").value="0";$("manualEnd").value=decoded.duration.toFixed(2);
-    updateUI();
+    updateUI();drawTimeline();
   }catch(e){
     console.error(e);workingBuffer=null;originalBuffer=null;
     setStatus("silenceStatus","Could not decode this file. Try WAV, MP3 or another browser-supported format.");
@@ -408,47 +431,100 @@ function makePreviewBlob(buffer,start,end){
   return encodeWav(clip);
 }
 
+let cutCandidates=[];
+let activeCutId=null;
+let dragMode=null;
+let timelinePps=8;
+const waveCanvas=$("waveCanvas"), waveCtx=waveCanvas.getContext("2d");
+let lastTimelineDraw=0;
+
+function timelineX(seconds){return seconds*timelinePps;}
+function drawTimeline(){
+  if(!workingBuffer)return;
+  const duration=workingBuffer.duration;
+  const cssWidth=Math.max(700,Math.min(30000,Math.ceil(duration*timelinePps)));
+  const h=180,dpr=Math.min(2,window.devicePixelRatio||1);
+  waveCanvas.style.width=cssWidth+"px";waveCanvas.style.height=h+"px";
+  waveCanvas.width=Math.floor(cssWidth*dpr);waveCanvas.height=Math.floor(h*dpr);
+  waveCtx.setTransform(dpr,0,0,dpr,0,0);
+  waveCtx.fillStyle="#111722";waveCtx.fillRect(0,0,cssWidth,h);
+  // timeline ticks
+  const tick=Math.max(5,Math.ceil(40/timelinePps/5)*5);
+  waveCtx.font="11px Arial";waveCtx.fillStyle="#b9c3d2";waveCtx.strokeStyle="#394456";waveCtx.lineWidth=1;
+  for(let t=0;t<=duration;t+=tick){const x=timelineX(t);waveCtx.beginPath();waveCtx.moveTo(x,20);waveCtx.lineTo(x,h);waveCtx.stroke();waveCtx.fillText(t+"s",x+3,13);}
+  // waveform peak envelope
+  const monoLength=workingBuffer.length, sr=workingBuffer.sampleRate;
+  const channels=Array.from({length:workingBuffer.numberOfChannels},(_,c)=>workingBuffer.getChannelData(c));
+  const pixels=Math.max(1,cssWidth-1), samplesPerPixel=Math.max(1,Math.floor(monoLength/pixels));
+  waveCtx.strokeStyle="#55e6a5";waveCtx.lineWidth=1;
+  for(let x=0;x<pixels;x++){
+    const a=x*samplesPerPixel,b=Math.min(monoLength,a+samplesPerPixel);let peak=0;
+    for(let i=a;i<b;i+=Math.max(1,Math.floor((b-a)/12)))for(const ch of channels)peak=Math.max(peak,Math.abs(ch[i]||0));
+    const amp=Math.max(1,peak*67);waveCtx.beginPath();waveCtx.moveTo(x,95-amp);waveCtx.lineTo(x,95+amp);waveCtx.stroke();
+  }
+  // all candidate cut ranges
+  for(const c of cutCandidates){
+    const x=timelineX(c.start),w=Math.max(2,timelineX(c.end-c.start));
+    waveCtx.fillStyle=c.id===activeCutId?"rgba(255,179,71,.42)":"rgba(232,75,95,.22)";
+    waveCtx.fillRect(x,22,w,145);
+    waveCtx.strokeStyle=c.id===activeCutId?"#ffb347":"#e85b70";waveCtx.lineWidth=c.id===activeCutId?3:1;
+    waveCtx.strokeRect(x,22,w,145);
+  }
+  // playhead
+  const px=timelineX(mainAudio.currentTime||0);waveCtx.strokeStyle="#ffffff";waveCtx.lineWidth=2;waveCtx.beginPath();waveCtx.moveTo(px,18);waveCtx.lineTo(px,177);waveCtx.stroke();
+  if(activeCutId){const c=cutCandidates.find(x=>x.id===activeCutId);if(c){waveCtx.fillStyle="#ffb347";for(const x of [timelineX(c.start),timelineX(c.end)])waveCtx.fillRect(x-5,20,10,150);}}
+}
+function setActiveCut(id){
+  const c=cutCandidates.find(x=>x.id===id);if(!c)return;
+  activeCutId=id;$("cutStart").value=c.start.toFixed(2);$("cutEnd").value=c.end.toFixed(2);
+  $("activeCutInfo").textContent=`Editing ${c.label}. Drag orange handles on the waveform or adjust the time fields. This candidate is ${c.checked?"selected for removal":"not selected for removal"}.`;
+  document.querySelectorAll(".cut-row").forEach(el=>el.classList.toggle("active",el.dataset.id===id));
+  const x=timelineX(c.start);$("waveScroll").scrollLeft=Math.max(0,x-120);drawTimeline();
+}
+function syncActiveInputs(){
+  const c=cutCandidates.find(x=>x.id===activeCutId);if(!c)return;
+  const a=Number($("cutStart").value),b=Number($("cutEnd").value);
+  if(Number.isFinite(a)&&Number.isFinite(b)&&a>=0&&b<=workingBuffer.duration&&b>a){c.start=a;c.end=b;drawTimeline();}
+}
+$("cutStart").addEventListener("change",syncActiveInputs);$("cutEnd").addEventListener("change",syncActiveInputs);
+$("timelineZoom").addEventListener("input",()=>{timelinePps=Number($("timelineZoom").value);$("zoomLabel").textContent=timelinePps;drawTimeline();});
+mainAudio.addEventListener("timeupdate",()=>{const now=performance.now();if(workingBuffer&&waveCanvas.width&&now-lastTimelineDraw>900){lastTimelineDraw=now;drawTimeline();}});
+waveCanvas.addEventListener("pointerdown",e=>{
+  if(!workingBuffer)return;const rect=waveCanvas.getBoundingClientRect();const x=(e.clientX-rect.left);const c=cutCandidates.find(z=>z.id===activeCutId);
+  if(c&&Math.abs(x-timelineX(c.start))<18)dragMode="start";
+  else if(c&&Math.abs(x-timelineX(c.end))<18)dragMode="end";
+  else{mainAudio.currentTime=Math.max(0,Math.min(workingBuffer.duration,x/timelinePps));drawTimeline();return;}
+  waveCanvas.setPointerCapture(e.pointerId);
+});
+waveCanvas.addEventListener("pointermove",e=>{
+  if(!dragMode||!activeCutId)return;const c=cutCandidates.find(z=>z.id===activeCutId);if(!c)return;
+  const rect=waveCanvas.getBoundingClientRect();const t=Math.max(0,Math.min(workingBuffer.duration,(e.clientX-rect.left)/timelinePps));
+  if(dragMode==="start")c.start=Math.min(t,c.end-.05);else c.end=Math.max(t,c.start+.05);
+  $("cutStart").value=c.start.toFixed(2);$("cutEnd").value=c.end.toFixed(2);drawTimeline();
+});
+waveCanvas.addEventListener("pointerup",()=>{dragMode=null;});waveCanvas.addEventListener("pointercancel",()=>{dragMode=null;});
+
 function renderResults(){
-  const root=$("retakeResults");root.innerHTML="";
-  if(!detectedGroups.length){root.textContent="No repeated speech detected. This does not guarantee that every retake was found.";return;}
+  const root=$("retakeResults");root.innerHTML="";cutCandidates=[];activeCutId=null;
+  if(!detectedGroups.length){root.textContent="No repeated speech detected. This does not guarantee that no retakes exist.";drawTimeline();return;}
   detectedGroups.forEach((g,idx)=>{
     const box=document.createElement("div");box.className="item";
-    const top=document.createElement("div");top.className="row";
-    const check=document.createElement("input");check.type="checkbox";check.className="rtcheckbox";check.dataset.index=idx;check.checked=false;
-    const title=document.createElement("b");title.textContent=`Suggestion #${idx+1} · ${g.occurrences.length} matching attempts`;
-    top.append(check,title);box.append(top);
-    const sentence=document.createElement("p");sentence.textContent=`Recognized repeated text: “${g.text}”`;box.append(sentence);
-    const hint=document.createElement("p");hint.className="info";hint.textContent="Earlier attempts are proposed for removal; the last attempt is kept. Times are approximate—listen and adjust.";box.append(hint);
+    const title=document.createElement("b");title.textContent=`AI suggestion #${idx+1} · ${g.occurrences.length} matching attempts`;box.append(title);
+    const sentence=document.createElement("p");sentence.textContent=`Recognized phrase: “${g.text}”`;box.append(sentence);
+    const hint=document.createElement("p");hint.className="info";hint.textContent="Each earlier attempt is a separate optional cut. The last attempt is kept automatically. AI times are approximate; preview and adjust.";box.append(hint);
     g.occurrences.forEach((o,oi)=>{
-      const attempt=document.createElement("div");attempt.className="item";
-      const label=document.createElement("b");label.textContent=oi===g.occurrences.length-1?`Attempt ${oi+1} (LAST — keep by default)`:`Attempt ${oi+1} (proposed cut)`;attempt.append(label);
-      const grid=document.createElement("div");grid.className="timegrid";
-      const st=document.createElement("div"),en=document.createElement("div");
-      const sl=document.createElement("label");sl.textContent="Start seconds";
-      const el=document.createElement("label");el.textContent="End seconds";
-      const si=document.createElement("input");si.type="number";si.step=".01";si.min="0";si.value=o.start.toFixed(2);
-      const ei=document.createElement("input");ei.type="number";ei.step=".01";ei.min="0";ei.value=o.end.toFixed(2);
-      si.addEventListener("change",()=>{o.start=Math.max(0,Number(si.value)||0);});
-      ei.addEventListener("change",()=>{o.end=Math.max(0,Number(ei.value)||0);});
-      st.append(sl,si);en.append(el,ei);grid.append(st,en);attempt.append(grid);
-      const listen=document.createElement("button");listen.className="secondary smallbtn";listen.textContent="▶ Listen to this attempt";
-      listen.addEventListener("click",()=>{
-        try{
-          const blob=makePreviewBlob(workingBuffer,Math.max(0,o.start-1.5),Math.min(workingBuffer.duration,o.end+1.5));
-          revoke(previewURL);previewURL=URL.createObjectURL(blob);previewAudio.src=previewURL;previewAudio.play();
-        }catch(e){alert(e.message);}
-      });
-      attempt.append(listen);
-      if(oi<g.occurrences.length-1){
-        const use=document.createElement("button");use.className="danger smallbtn";use.textContent="Mark this attempt as cut range";
-        use.addEventListener("click",()=>{check.checked=true;});
-        attempt.append(use);
-      }
-      box.append(attempt);
-    });
-    root.append(box);
+      const isLast=oi===g.occurrences.length-1;
+      if(isLast){const keep=document.createElement("p");keep.className="good";keep.textContent=`✓ Attempt ${oi+1} kept by default (${o.start.toFixed(2)}–${o.end.toFixed(2)} sec)`;box.append(keep);return;}
+      const id=`g${idx}a${oi}`;const c={id,start:o.start,end:o.end,checked:false,label:`Suggestion ${idx+1}, attempt ${oi+1}`};cutCandidates.push(c);
+      const row=document.createElement("div");row.className="cut-row";row.dataset.id=id;
+      const cb=document.createElement("input");cb.type="checkbox";cb.addEventListener("change",()=>{c.checked=cb.checked;});
+      const meta=document.createElement("div");meta.innerHTML="";const strong=document.createElement("b");strong.textContent=`Attempt ${oi+1} · proposed cut`;const small=document.createElement("div");small.className="attempt-meta";small.textContent=`${o.start.toFixed(2)}s – ${o.end.toFixed(2)}s`;
+      const focus=document.createElement("button");focus.className="secondary";focus.textContent="Edit on timeline";focus.addEventListener("click",()=>setActiveCut(id));
+      row.append(cb,meta,focus);meta.append(strong,small);box.append(row);
+    });root.append(box);
   });
-  $("selectAllBtn").disabled=false;$("clearAllBtn").disabled=false;$("applyRetakesBtn").disabled=false;
+  $("selectAllBtn").disabled=false;$("clearAllBtn").disabled=false;$("applyRetakesBtn").disabled=cutCandidates.length===0;
+  if(cutCandidates.length)setActiveCut(cutCandidates[0].id);drawTimeline();
 }
 
 $("detectBtn").addEventListener("click",async()=>{
@@ -466,30 +542,23 @@ $("detectBtn").addEventListener("click",async()=>{
   finally{$("detectBtn").disabled=!workingBuffer||!model;}
 });
 
-$("selectAllBtn").onclick=()=>document.querySelectorAll("#retakeResults input[type=checkbox]").forEach(x=>x.checked=true);
-$("clearAllBtn").onclick=()=>document.querySelectorAll("#retakeResults input[type=checkbox]").forEach(x=>x.checked=false);
+$("selectAllBtn").onclick=()=>{document.querySelectorAll("#retakeResults .cut-row input[type=checkbox]").forEach(x=>{x.checked=true;x.dispatchEvent(new Event("change"));});};
+$("clearAllBtn").onclick=()=>{document.querySelectorAll("#retakeResults .cut-row input[type=checkbox]").forEach(x=>{x.checked=false;x.dispatchEvent(new Event("change"));});};
 
 $("applyRetakesBtn").addEventListener("click",()=>{
   try{
     if(workingBuffer!==detectionBufferRef)throw new Error("The working audio changed after detection. Please detect again.");
-    const selected=[...document.querySelectorAll("#retakeResults input[type=checkbox]:checked")];
-    if(!selected.length)throw new Error("Select at least one suggestion.");
-    let cuts=selected.flatMap(el=>{
-      const g=detectedGroups[Number(el.dataset.index)];
-      return g.occurrences.slice(0,-1).map(o=>({start:o.start,end:o.end}));
-    });
-    cuts=cuts.map(c=>({start:Math.max(0,c.start),end:Math.min(workingBuffer.duration,c.end)})).filter(c=>c.end>c.start).sort((a,b)=>a.start-b.start);
-    const merged=[];
+    const chosen=cutCandidates.filter(c=>c.checked);
+    if(!chosen.length)throw new Error("Tick at least one proposed attempt to cut.");
+    let cuts=chosen.map(c=>({start:Math.max(0,c.start),end:Math.min(workingBuffer.duration,c.end)})).filter(c=>c.end>c.start);
+    cuts.sort((a,b)=>a.start-b.start);const merged=[];
     for(const c of cuts){const last=merged[merged.length-1];if(last&&c.start<=last.end)last.end=Math.max(last.end,c.end);else merged.push({...c});}
-    const ranges=[];let pos=0;
-    for(const c of merged){if(c.start>pos)ranges.push({start:pos,end:c.start});pos=Math.max(pos,c.end);}
-    if(pos<workingBuffer.duration)ranges.push({start:pos,end:workingBuffer.duration});
+    const ranges=[];let pos=0;for(const c of merged){if(c.start>pos)ranges.push({start:pos,end:c.start});pos=Math.max(pos,c.end);}if(pos<workingBuffer.duration)ranges.push({start:pos,end:workingBuffer.duration});
     if(!ranges.length)throw new Error("The selected cuts would remove the entire audio.");
-    const next=makeBufferFromRanges(workingBuffer,ranges);
-    pushHistory("Retake removal");workingBuffer=next;publishWorkingAudio();
-    const seconds=merged.reduce((s,c)=>s+c.end-c.start,0);
-    setStatus("retakeStatus",`Retake removal applied. Removed ${seconds.toFixed(2)} sec. All earlier silence edits were preserved.`);
-    detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
+    const next=makeBufferFromRanges(workingBuffer,ranges);pushHistory("AI retake cuts");workingBuffer=next;publishWorkingAudio();
+    const seconds=merged.reduce((sum,c)=>sum+c.end-c.start,0);
+    setStatus("retakeStatus",`Applied ${chosen.length} manually reviewed cut range(s). Removed ${seconds.toFixed(2)} sec. Previous silence edits are preserved.`);
+    detectedGroups=[];cutCandidates=[];activeCutId=null;$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;drawTimeline();
   }catch(e){console.error(e);setStatus("retakeStatus","Could not apply cuts: "+e.message);}
 });
 
