@@ -195,7 +195,7 @@ function draw(){
  const centers=work.numberOfChannels>1?[h*.38,h*.70]:[h*.54];
  const ampMax=work.numberOfChannels>1?h*.24:h*.36;
  ctx.strokeStyle="#55e6a5";ctx.lineWidth=1;
- for(let x=0;x<pixelWidth;x++){
+ for(let x=0;x<px;x++){
   const t=(offset+x)/zoom;if(t>=work.duration)break;
   const a=Math.max(0,Math.floor(t*sr)),b=Math.min(work.length,Math.max(a+1,Math.floor((offset+x+1)/zoom*sr)));
   channels.forEach((ch,c)=>{let peak=0;const step=Math.max(1,Math.floor((b-a)/24));for(let i=a;i<b;i+=step){const v=Math.abs(ch[i]||0);if(v>peak)peak=v}const cy=centers[Math.min(c,centers.length-1)],amp=Math.max(1,peak*ampMax);ctx.beginPath();ctx.moveTo(x,cy-amp);ctx.lineTo(x,cy+amp);ctx.stroke()});
