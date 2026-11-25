@@ -3,9 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#090d14">
-<title>Audio Cleaner Studio</title>
+<meta name="theme-color" content="#080d17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Audio Cleaner Studio — by Shahriyar Najim Piyash</title>
 <style>
+
 :root{--bg:#090d14;--panel:#151d2a;--line:#34445b;--green:#55e6a5;--blue:#3478f6;--red:#e05268;--orange:#ffb347;--text:#f5f7fb;--muted:#9eacbf}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font:14px Arial,sans-serif;overflow:hidden}button,input,select{font:inherit}button{border:0;border-radius:8px;padding:9px 12px;background:var(--green);color:#07130e;font-weight:700;white-space:nowrap}button:disabled{opacity:.38}button.blue{background:var(--blue);color:white}button.red{background:var(--red);color:white}button.dark,button.ghost{background:#26364b;color:white}button.ghost{border:1px solid #43516a}button.icon{width:40px;height:38px;padding:0;font-size:18px}
 #app{height:100dvh;display:flex;flex-direction:column}.topbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:9px;padding:0 10px;background:#111925;border-bottom:1px solid var(--line)}.brand{font-weight:800;color:var(--green);white-space:nowrap}.filelabel{padding:8px 11px;background:#26364b;border-radius:8px;font-weight:bold;white-space:nowrap}#file{display:none}.filename{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}.actions{display:flex;gap:5px}
@@ -13,11 +17,52 @@
 .editor{background:#0b1018;border:1px solid var(--line);border-radius:11px;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}.toolbar{min-height:46px;flex:0 0 46px;background:#131d2a;display:flex;align-items:center;gap:5px;padding:5px 7px;overflow-x:auto}.toolbar button{font-size:12px;padding:8px 10px}.sep{height:25px;width:1px;background:#46546a;flex:0 0 1px}.zoomwrap{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:11px;white-space:nowrap}#zoom{width:105px;accent-color:var(--green)}#zoomValue{color:white;width:35px;text-align:right}
 #timelineScroll{position:relative;flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;background:#0a0f17;overscroll-behavior-x:contain;scrollbar-color:#43536a #101722}#track{height:100%;min-height:190px;position:relative}#wave{position:sticky;left:0;top:0;display:block;height:100%;min-height:190px;touch-action:none;cursor:crosshair}
 .footer{height:27px;flex:0 0 27px;background:#131d2a;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 9px;color:var(--muted);font-size:11px;gap:7px}.bottom{display:flex;align-items:center;gap:8px;min-height:30px}#selectionInfo{font-size:11px;color:var(--muted);flex:1;overflow-wrap:anywhere}#playStatus{font-size:11px;color:var(--green);white-space:nowrap}
-.portrait{display:none}@media(orientation:portrait){#app{visibility:hidden}.portrait{display:flex;position:fixed;inset:0;z-index:9;background:#0b111b;align-items:center;justify-content:center;text-align:center;padding:25px}.portrait div{max-width:300px}}@media(max-height:430px) and (orientation:landscape){.topbar{height:39px;flex-basis:39px}.main{padding:5px;gap:5px}.toolbar{min-height:40px;flex-basis:40px}.silence{padding:5px}}
+@media(max-height:430px) and (orientation:landscape){.topbar{height:39px;flex-basis:39px}.main{padding:5px;gap:5px}.toolbar{min-height:40px;flex-basis:40px}.silence{padding:5px}}
+
+/* Premium studio skin */
+:root{--bg:#070b13;--panel:#111a29;--line:rgba(145,170,205,.17);--green:#65f0bd;--blue:#527dff;--red:#ff5f78;--orange:#ffc46b;--text:#f5f7ff;--muted:#98a8c1}
+html,body{font-family:'DM Sans',system-ui,sans-serif;background:radial-gradient(ellipse at 18% -15%,#182b45 0,transparent 42%),#070b13;letter-spacing:.01em}
+button{border-radius:11px;padding:10px 14px;box-shadow:0 5px 16px #0003;transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;font-weight:700}
+button:not(:disabled):active{transform:translateY(1px) scale(.98);filter:brightness(1.12)}
+button.blue{background:linear-gradient(135deg,#668cff,#3c69ed);box-shadow:0 5px 18px #3868ee44}
+button.red{background:linear-gradient(135deg,#ff7185,#d94361)}
+button.dark,button.ghost{background:linear-gradient(145deg,#26364d,#1b293c);border:1px solid #ffffff12}
+.topbar{height:54px;flex-basis:54px;padding:0 14px;background:rgba(13,20,33,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.brand{font-family:'Space Grotesk',sans-serif;font-size:16px;letter-spacing:-.035em;color:#75f2c2;text-shadow:0 0 22px #55e6a555}
+.filelabel{background:linear-gradient(135deg,#314866,#20334c);border:1px solid #ffffff17;border-radius:11px;padding:10px 14px;box-shadow:0 5px 16px #0003}
+.filename{font-size:12px}.actions{gap:7px}.main{padding:9px;gap:9px}
+.silence{background:linear-gradient(135deg,rgba(23,36,56,.96),rgba(15,25,41,.96));border:1px solid #9db6d31c;border-radius:15px;padding:10px 12px;box-shadow:0 12px 30px #0003}
+.green{font-family:'Space Grotesk',sans-serif;font-size:13px;letter-spacing:.01em;color:#73f0c1}
+.setting{font-size:12px;color:#aab8cc}select{border-radius:10px;padding:9px 10px;background:#0b1422;border:1px solid #8297b533;outline:none}
+.status{font-size:12px}.editor{border:1px solid #9db6d326;border-radius:15px;background:#080e18;box-shadow:0 18px 44px #0005}
+.toolbar{background:linear-gradient(180deg,#172438,#111b2a);min-height:52px;flex-basis:52px;padding:6px 9px;gap:7px}
+.toolbar button{border-radius:10px;padding:9px 12px}.toolbar .icon{border-radius:11px}
+.sep{background:#8195b32b;height:28px}.zoomwrap{font-weight:700;letter-spacing:.08em}#zoom{accent-color:#70edc0}
+#timelineScroll{background:linear-gradient(180deg,#091321,#080e18)}#wave{cursor:crosshair}
+.footer{background:#111b2a;border-top:1px solid #ffffff10;height:30px;flex-basis:30px;font-variant-numeric:tabular-nums}
+.bottom{padding:0 3px}#selectionInfo{font-size:12px}#playStatus{font-weight:700;color:#72edbd}
+.intro{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#1b3551 0,#0b1423 43%,#060a12 100%);transition:opacity .55s ease,visibility .55s ease}
+.intro.hide{opacity:0;visibility:hidden;pointer-events:none}.intro-glow{position:absolute;width:62vmin;height:62vmin;border-radius:50%;background:#4de7b51a;filter:blur(55px);animation:glowPulse 3s ease-in-out infinite alternate}
+.intro-content{position:relative;text-align:center;padding:22px;animation:introRise .8s cubic-bezier(.2,.8,.2,1) both;max-width:650px;width:100%}
+.intro-mark{font:700 clamp(28px,6vw,48px) 'Space Grotesk',sans-serif;letter-spacing:-.1em;color:#f5ffff;text-shadow:0 0 28px #55e6a577}.intro-mark span{color:#65f0bd;font-size:.55em;vertical-align:top;margin-left:7px}
+.intro-kicker{font-size:10px;letter-spacing:.34em;color:#81a4bb;margin-top:4px}.intro-content h1{font:700 clamp(24px,5vw,42px) 'Space Grotesk',sans-serif;letter-spacing:.12em;margin:10px 0 12px;color:#f5f8ff}
+.intro-rule{height:2px;width:66px;margin:0 auto 18px;background:linear-gradient(90deg,transparent,#65f0bd,transparent)}.intro-created{font-size:13px;color:#a7b8ce;margin:0 0 6px}.intro-content h2{font:700 clamp(20px,4vw,32px) 'Space Grotesk',sans-serif;color:#70f0c1;margin:0 0 18px;text-shadow:0 0 24px #65f0bd33}
+.intro-contact-label{font-size:9px;letter-spacing:.22em;color:#92a6c0;margin:0 0 6px}.intro-contact,.intro-email{display:block;color:#f5f8ff;text-decoration:none;font-size:14px;font-weight:600;margin:5px auto}.intro-email{font-size:12px;color:#9fb4ca;font-weight:500}.intro-foot{font-size:9px;letter-spacing:.25em;color:#60758e;margin-top:22px}.skip-intro{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:40px;height:40px;border-radius:50%;background:#ffffff12;color:white;border:1px solid #ffffff22;font-size:25px;font-weight:400;z-index:2;box-shadow:none}
+.intro-progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff10}.intro-progress span{display:block;height:100%;width:100%;transform-origin:left;background:linear-gradient(90deg,#4c8dff,#65f0bd);animation:introTimer 5s linear forwards}
+@keyframes introTimer{to{transform:scaleX(0)}}@keyframes introRise{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes glowPulse{to{transform:scale(1.18);opacity:.65}}
+@media(max-height:430px) and (orientation:landscape){.topbar{height:42px;flex-basis:42px}.main{padding:6px;gap:6px}.toolbar{min-height:44px;flex-basis:44px}.silence{padding:6px 9px}.intro-content{padding:8px}.intro-content h1{margin:5px 0}.intro-rule{margin-bottom:8px}.intro-content h2{margin-bottom:8px}.intro-foot{margin-top:10px}}
+
 </style>
 </head>
 <body>
-<div class="portrait"><div><div style="font-size:48px">📱 ↻</div><h2>Rotate your phone</h2><p>This audio editor is designed for landscape mode. Turn your phone sideways to use the timeline.</p></div></div>
+<section id="intro" class="intro" aria-label="Developer introduction">
+ <div class="intro-glow"></div><button id="skipIntro" class="skip-intro" aria-label="Skip introduction">×</button>
+ <div class="intro-content"><div class="intro-mark">AC<span>✦</span></div><div class="intro-kicker">MOBILE TIMELINE STUDIO</div>
+ <h1>AUDIO CLEANER</h1><div class="intro-rule"></div><p class="intro-created">This software is created by</p>
+ <h2>Shahriyar Najim Piyash</h2><p class="intro-contact-label">IF ANY INQUIRY, CONTACT</p>
+ <a href="tel:+8801828584521" class="intro-contact">+8801828584521</a><a href="mailto:thepeyas@gmail.com" class="intro-email">thepeyas@gmail.com</a>
+ <div class="intro-foot">DESIGNED & BUILT WITH CARE</div></div><div class="intro-progress"><span></span></div>
+</section>
 <div id="app">
 <header class="topbar"><div class="brand">Audio Cleaner Studio</div><label class="filelabel" for="file">＋ Open Audio</label><input id="file" type="file" accept="audio/*"><div class="filename" id="fileInfo">No audio loaded</div><div class="actions"><button id="undo" class="icon dark" disabled title="Undo">↶</button><button id="redo" class="icon dark" disabled title="Redo">↷</button><button id="export" class="dark" disabled>⬇ WAV</button></div></header>
 <main class="main">
@@ -71,5 +116,17 @@ $("silenceBtn").onclick=async()=>{if(!work)return;const btn=$("silenceBtn");btn.
 $("export").onclick=()=>{if(!work)return;const u=URL.createObjectURL(wav(work)),a=document.createElement("a");a.href=u;a.download=(filename.replace(/\.[^.]+$/,"")||"cleaned-audio")+".wav";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);msg("WAV export started.")};
 file.addEventListener("change",async()=>{const f=file.files&&file.files[0];if(!f)return;if(!AC){msg("This browser does not support Web Audio API.");return}player.pause();msg("Loading and decoding audio…");$("silenceBtn").disabled=true;try{const ac=new AC(),decoded=await ac.decodeAudioData(await f.arrayBuffer());await ac.close();work=decoded;history=[];redo=[];clipboard=null;selection=null;filename=f.name;$("fileInfo").textContent=f.name+" · "+(f.size/1048576).toFixed(1)+" MB · "+decoded.duration.toFixed(1)+" sec";zoom=clamp(scroll.clientWidth/decoded.duration,1,125);$("zoom").value=Math.round(zoom);$("zoomValue").textContent=Math.round(zoom)+"×";publish();scroll.scrollLeft=0;msg("Audio ready. Silence removal and timeline editing are available.")}catch(e){msg("Could not open this audio: "+(e.message||"Unknown decoding error"));$("silenceBtn").disabled=true}});
 window.addEventListener("resize",()=>{if(work){resize();draw()}});selectionUI();historyUI();
+
+// Five-second developer splash; the close button skips it immediately.
+(function(){
+ const splash=document.getElementById('intro'),skip=document.getElementById('skipIntro');
+ let closed=false;function closeIntro(){if(closed)return;closed=true;splash.classList.add('hide');setTimeout(()=>splash.remove(),650)}
+ skip.addEventListener('click',closeIntro);const introTimer=setTimeout(closeIntro,5000);
+ // Browsers may reject orientation locking unless running fullscreen/PWA; the APK must also lock it natively.
+ async function requestLandscape(){try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(_){/* Native Android manifest handles APK orientation. */}}
+ window.addEventListener('load',()=>{requestLandscape();});
+ document.addEventListener('fullscreenchange',()=>{if(document.fullscreenElement)requestLandscape()});
+})();
+
 </script>
 </body></html>
