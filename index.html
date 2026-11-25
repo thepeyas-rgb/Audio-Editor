@@ -932,12 +932,20 @@ function normalizeText(text) {
 // 4. TRANSCRIBE COMPLETE RECORDING
 // ------------------------------------
 
+
+// ==========================================
+// LONG AUDIO TRANSCRIPTION ENGINE
+// Segment timestamps - NO cross attention
+// Sequential processing for mobile devices
+// ==========================================
+
 async function transcribe(buffer) {
 
   const allWords = [];
 
   const duration = buffer.duration;
 
+  // Small chunks reduce temporary memory pressure.
   const chunkSize = 20;
   const overlap = 2;
   const step = chunkSize - overlap;
@@ -958,83 +966,148 @@ async function transcribe(buffer) {
     );
 
     status.textContent =
-      "Transcribing audio: " +
+      "AI Processing: " +
       (index + 1) + " / " + total +
-      "\nPlease do not close this page.";
+      " sections (" +
+      Math.round(end / duration * 100) +
+      "%)\nPlease keep this page open.";
 
+    // Prepare only the current audio section.
     const audio = await prepareAudio(
       buffer,
       start,
       end
     );
 
-    const output = await recognizer(
+    // IMPORTANT:
+    // true = segment timestamps
+    // "word" = cross-attention word timestamps
+    // We intentionally use true.
+
+    const result = await recognizer(
       audio,
       {
-        task: "transcribe",
-        return_timestamps: "word"
+        return_timestamps: true,
+        task: "transcribe"
       }
     );
 
-    if (!output.chunks || !output.chunks.length) {
+    let segments = result.chunks || [];
 
-      throw new Error(
-        "Word timestamps unavailable. Try another supported model."
-      );
+    // Fallback if model returns text without chunks.
+    if (!segments.length && result.text) {
+
+      segments = [{
+        text: result.text,
+        timestamp: [0, end - start]
+      }];
 
     }
 
-    for (const chunk of output.chunks) {
+    for (const segment of segments) {
 
-      if (!chunk.timestamp) continue;
+      if (!segment.text) continue;
 
-      const localStart = chunk.timestamp[0];
-      const localEnd = chunk.timestamp[1];
+      let localStart = segment.timestamp?.[0];
+      let localEnd = segment.timestamp?.[1];
 
       if (
         !Number.isFinite(localStart) ||
-        !Number.isFinite(localEnd)
-      ) continue;
+        !Number.isFinite(localEnd) ||
+        localEnd <= localStart
+      ) {
 
-      const text = chunk.text || "";
+        localStart = 0;
+        localEnd = end - start;
 
-      const normal = normalizeText(text);
+      }
 
-      if (!normal) continue;
+      // Split recognized segment into words.
+      // Their timestamps are approximate, not exact.
+      const tokens = segment.text.match(/\S+/gu) || [];
 
-      const word = {
-        text,
-        normal,
-        start: start + localStart,
-        end: start + localEnd
-      };
+      if (!tokens.length) continue;
 
-      // Avoid duplicate words from overlapping chunks.
+      const segmentDuration =
+        localEnd - localStart;
 
-      const duplicate = allWords.some(w =>
+      const tokenDuration =
+        segmentDuration / tokens.length;
 
-        w.normal === word.normal &&
-        Math.abs(w.start - word.start) < 0.30
+      for (let t = 0; t < tokens.length; t++) {
 
-      );
+        const text = tokens[t];
 
-      if (!duplicate) {
-        allWords.push(word);
+        const normal = normalizeText(text);
+
+        if (!normal) continue;
+
+        const wordStart =
+          start + localStart + t * tokenDuration;
+
+        const wordEnd =
+          start + localStart +
+          (t + 1) * tokenDuration;
+
+        const word = {
+          text,
+          normal,
+          start: wordStart,
+          end: wordEnd
+        };
+
+        // Remove duplicate words caused by overlap.
+        // Check only recent words to avoid O(n²) processing.
+
+        let duplicate = false;
+
+        for (
+          let k = allWords.length - 1;
+          k >= Math.max(0, allWords.length - 100);
+          k--
+        ) {
+
+          const old = allWords[k];
+
+          if (wordStart - old.start > 1.5) break;
+
+          if (
+            old.normal === word.normal &&
+            Math.abs(old.start - wordStart) < 0.40
+          ) {
+
+            duplicate = true;
+            break;
+
+          }
+
+        }
+
+        if (!duplicate) {
+          allWords.push(word);
+        }
+
       }
 
     }
 
+    // Release temporary reference before next section.
+    // Give the phone time to update the interface.
+
     await new Promise(resolve =>
-      setTimeout(resolve, 10)
+      setTimeout(resolve, 30)
     );
 
   }
 
-  allWords.sort((a, b) => a.start - b.start);
+  allWords.sort(
+    (a, b) => a.start - b.start
+  );
 
   return allWords;
 
 }
+
 
 
 // ------------------------------------
