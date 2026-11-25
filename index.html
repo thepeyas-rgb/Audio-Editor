@@ -2,332 +2,323 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>AI Audio Cleaner — Timeline Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#090d14">
+<title>AI Audio Cleaner — Mobile Timeline Studio</title>
 <style>
-:root{--bg:#0d111b;--panel:#1b2433;--panel2:#263247;--green:#54e6a3;--blue:#3478f6;--red:#e05268;--orange:#ffb347;--muted:#aab5c5}
+:root{--bg:#090d14;--panel:#151d2a;--panel2:#202c3d;--line:#34445b;--green:#55e6a5;--blue:#3478f6;--red:#e05268;--orange:#ffb347;--text:#f5f7fb;--muted:#9eacbf}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#f5f7fb;font:15px Arial,sans-serif}
-.app{max-width:900px;margin:auto;padding:14px}
-h1{font-size:24px;text-align:center;color:var(--green);margin:10px 0 4px}
-.sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 16px}
-.card{background:var(--panel);border-radius:14px;padding:15px;margin:14px 0}
-h2{font-size:18px;color:var(--green);margin:0 0 12px}
-.info{font-size:12px;line-height:1.55;color:var(--muted)}
-button,select,input{font:inherit}
-button{border:0;border-radius:9px;padding:12px 14px;font-weight:700;background:var(--green);color:#101722;cursor:pointer}
-button:disabled{opacity:.4;cursor:not-allowed}
-button.blue{background:var(--blue);color:white}
-button.red{background:var(--red);color:white}
-button.dark{background:#344258;color:white}
-button.icon{width:48px;height:44px;padding:0;font-size:21px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.row>*{flex:1}
-.upload{display:block;border:2px dashed var(--green);border-radius:10px;padding:22px;text-align:center;color:var(--green);cursor:pointer}
-input[type=file]{display:none}
-audio{width:100%;margin-top:10px}
-.status{color:var(--green);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
-select{width:100%;padding:11px;background:#101722;color:white;border:1px solid #59677c;border-radius:8px}
-.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.settings label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-.timeline-shell{background:#0b1019;border:1px solid #46536a;border-radius:10px;overflow:hidden}
-.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px;background:#151e2c;border-bottom:1px solid #3b475c}
-.toolbar button{flex:0 0 auto}
-.toolbar .spacer{flex:1}
-#zoom{width:120px;accent-color:var(--green)}
-#scroll{overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y;overscroll-behavior-x:contain}
-#wave{display:block;height:190px;touch-action:pan-y;cursor:crosshair}
-.timebar{display:flex;justify-content:space-between;padding:6px 9px;background:#151e2c;color:var(--muted);font-size:11px}
-.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding:8px}
-.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
-#aiList .suggestion{background:var(--panel2);border-radius:10px;padding:12px;margin-top:10px}
-.suggestion p{margin:7px 0;line-height:1.5;overflow-wrap:anywhere}
-.suggestion button{padding:9px 11px;font-size:12px}
-.suggestion .meta{font-size:12px;color:var(--muted)}
-#undo{width:100%}
-#download{display:block;text-align:center;text-decoration:none;background:var(--blue);color:white;padding:13px;border-radius:9px;margin-top:10px;font-weight:bold}
-@media(max-width:520px){.app{padding:9px}.settings{grid-template-columns:1fr}.toolbar{gap:5px}.toolbar button{padding:10px}.toolbar .icon{width:42px}.card{padding:12px}}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font:14px Arial,sans-serif;overflow:hidden}
+button,input,select{font:inherit}
+button{border:0;border-radius:8px;padding:10px 13px;background:var(--green);color:#07130e;font-weight:700;cursor:pointer;white-space:nowrap}
+button:disabled{opacity:.38;cursor:not--allowed}
+button.blue{background:var(--blue);color:#fff}button.red{background:var(--red);color:#fff}button.dark{background:#2b394d;color:#fff}button.ghost{background:#1d2939;color:#eaf0f8;border:1px solid #43516a}
+button.icon{width:42px;height:40px;padding:0;font-size:19px}
+#app{height:100dvh;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#111925;border-bottom:1px solid var(--line)}
+.brand{font-weight:800;color:var(--green);font-size:16px;white-space:nowrap}
+.filelabel{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;background:#26364b;color:#fff;border-radius:8px;font-weight:700;white-space:nowrap;cursor:pointer}
+#file{display:none}.filename{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.top-actions{display:flex;gap:6px}
+.main{display:flex;flex-direction:column;flex:1;min-height:0;padding:8px;gap:8px}
+.silence-panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto}
+.panel-title{font-weight:800;color:var(--green);white-space:nowrap}
+.setting{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:11px;white-space:nowrap}
+select{background:#0d1420;color:#fff;border:1px solid #4a5a72;border-radius:7px;padding:7px;max-width:190px}
+.status{font-size:11px;color:var(--muted);min-width:80px;flex:1;overflow-wrap:anywhere}
+.editor{background:#0b1018;border:1px solid var(--line);border-radius:11px;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.toolbar{height:48px;flex:0 0 48px;background:#131d2a;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:5px 8px;overflow-x:auto}
+.toolbar button{padding:8px 11px;font-size:12px}.toolbar .icon{padding:0;font-size:18px}
+.separator{height:26px;width:1px;background:#46546a;margin:0 3px;flex:0 0 1px}
+.zoomwrap{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:11px;white-space:nowrap}
+#zoom{width:110px;accent-color:var(--green)}
+#zoomValue{width:45px;color:#fff;text-align:right;font-variant-numeric:tabular-nums}
+#timelineScroll{position:relative;flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;background:#0a0f17;overscroll-behavior-x:contain;scrollbar-color:#43536a #101722;scrollbar-width:thin}
+#track{height:100%;min-height:190px;position:relative}
+#wave{position:sticky;left:0;top:0;display:block;height:100%;min-height:190px;touch-action:none;cursor:crosshair}
+.timeline-footer{height:28px;flex:0 0 28px;background:#131d2a;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 10px;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.bottom{display:flex;align-items:center;gap:8px;min-height:38px;flex:0 0 auto}
+#selectionInfo{font-size:11px;color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere}
+#playStatus{font-size:11px;color:var(--green);white-space:nowrap}
+.portrait{display:none}
+#resultPlayer{display:none}
+@media(orientation:landscape){
+ .main{padding:7px;gap:7px}
+ .silence-panel{min-height:48px}
+ .editor{min-height:0}
+}
+@media(orientation:portrait){
+ #app{visibility:hidden}
+ .portrait{display:flex;position:fixed;inset:0;z-index:99;background:#0b111b;color:white;align-items:center;justify-content:center;text-align:center;padding:28px}
+ .portrait-inner{max-width:320px}
+ .portrait .rotate{font-size:50px;margin-bottom:16px}
+}
+@media(max-height:430px) and (orientation:landscape){
+ .topbar{height:40px;flex-basis:40px}.main{padding:5px;gap:5px}
+ .silence-panel{padding:5px 8px;min-height:38px}.toolbar{height:42px;flex-basis:42px}
+ .timeline-footer{height:23px;flex-basis:23px}.toolbar button{padding:6px 9px}
+}
 </style>
 </head>
 <body>
-<div class="app">
-<h1>AI Audio Cleaner</h1>
-<p class="sub">Silence Remover · AI Retake Suggestions · Timeline Editing</p>
-
-<section class="card">
-<label class="upload" for="file">🎵<br><br><b>Choose audio file</b><br><small>MP3 / WAV / M4A / supported audio</small></label>
-<input id="file" type="file" accept="audio/*">
-<p id="fileInfo" class="info">No audio loaded.</p>
-<p class="info">The audio player below controls the same working audio shown in the timeline.</p>
-<audio id="player" controls preload="metadata"></audio>
-<p id="loadStatus" class="status">Choose an audio file to begin.</p>
-</section>
-
-<section class="card">
-<h2>🎚️ Timeline Editor</h2>
-<p class="info">Tap anywhere on the waveform to move the playhead. Drag across the waveform to select a range. Drag either orange handle to adjust its edges. Use the trash button to remove the selected range.</p>
-<div class="timeline-shell">
- <div class="toolbar">
-  <button id="play" class="icon blue" title="Play / Pause">▶</button>
-  <button id="stop" class="icon dark" title="Stop">■</button>
-  <button id="trash" class="icon red" title="Delete selected range" disabled>🗑</button>
-  <button id="clearSel" class="dark" title="Clear selection">Clear selection</button>
-  <span class="spacer"></span>
-  <span style="font-size:11px;color:#b8c3d4">Zoom</span>
-  <input id="zoom" type="range" min="2" max="18" value="5" step="1">
- </div>
- <div id="scroll"><canvas id="wave" width="800" height="190"></canvas></div>
- <div class="timebar"><span id="currentTime">00:00.0</span><span id="duration">00:00.0</span></div>
- <div class="legend">
-  <span><i class="dot" style="background:#54e6a3"></i>Waveform</span>
-  <span><i class="dot" style="background:#e05268"></i>AI suggestion</span>
-  <span><i class="dot" style="background:#ffb347"></i>Manual selection</span>
- </div>
-</div>
-<p id="selectionInfo" class="status">No range selected.</p>
-</section>
-
-<section class="card">
-<h2>✂️ Silence Remover</h2>
-<div class="settings">
- <div><label>Maximum silence to keep (seconds)</label><select id="maxSilence"><option>0.10</option><option>0.15</option><option>0.20</option><option>0.25</option><option>0.30</option><option>0.40</option><option>0.50</option></select></div>
- <div><label>Silence threshold</label><select id="threshold"><option value="-48">-48 dB (quiet speech safer)</option><option value="-42" selected>-42 dB</option><option value="-36">-36 dB</option><option value="-30">-30 dB</option></select></div>
-</div>
-<button id="silenceBtn" disabled style="width:100%;margin-top:12px">✂ Remove long pauses</button>
-<p id="silenceStatus" class="status">Waiting for audio.</p>
-</section>
-
-<section class="card">
-<h2>🧠 AI Retake & Duplicate Suggestions</h2>
-<p class="info">Load the multilingual Whisper model, then run detection. This version only creates a cut suggestion when repeated recognized segments have usable segment timestamps. It does not invent word-level timestamps. Always listen before deleting.</p>
-<div class="row">
- <button id="loadModel" class="blue">Load local AI model</button>
- <button id="detect" disabled>Detect repeats</button>
-</div>
-<p id="aiStatus" class="status">AI model not loaded.</p>
-<div class="settings">
- <div><label>Minimum matching words</label><select id="minWords"><option value="2">2 words</option><option value="3" selected>3 words</option><option value="4">4 words</option><option value="5">5 words</option><option value="7">7 words</option></select></div>
- <div><label>Maximum gap between attempts</label><select id="maxGap"><option value="10">10 seconds</option><option value="20" selected>20 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select></div>
-</div>
-<p class="info">Maximum gap means the largest time difference allowed between two matching spoken segments for them to be grouped as a possible retake. It is not the silence-removal duration.</p>
-<div id="aiList"></div>
-</section>
-
-<section class="card">
-<h2>✅ Current edited audio</h2>
-<p id="editInfo" class="info">Edits are cumulative. Removing a range after silence removal keeps the silence edit already made.</p>
-<audio id="resultPlayer" controls></audio>
-<a id="download" style="display:none">⬇ Download edited WAV</a>
-<button id="undo" class="blue" disabled style="margin-top:10px">↶ Undo last edit</button>
-<button id="reset" class="red" disabled style="width:100%;margin-top:9px">Reset to original upload</button>
-</section>
+<div class="portrait"><div class="portrait-inner"><div class="rotate">📱 ↻</div><h2>Rotate your phone</h2><p>This audio editor is designed for landscape mode. Turn your phone sideways to use the full timeline.</p></div></div>
+<div id="app">
+ <header class="topbar">
+  <div class="brand">Audio Cleaner Studio</div>
+  <label class="filelabel" for="file">＋ Open Audio</label><input id="file" type="file" accept="audio/*">
+  <div class="filename" id="fileInfo">No audio loaded</div>
+  <div class="top-actions"><button id="undo" class="icon dark" title="Undo last edit" disabled>↶</button><button id="redo" class="icon dark" title="Redo" disabled>↷</button></div>
+ </header>
+ <main class="main">
+  <section class="silence-panel">
+   <span class="panel-title">✂ Silence Remover</span>
+   <label class="setting">Max silence <select id="maxSilence"><option value="0.08">0.08 s</option><option value="0.10" selected>0.10 s</option><option value="0.15">0.15 s</option><option value="0.20">0.20 s</option><option value="0.25">0.25 s</option><option value="0.30">0.30 s</option><option value="0.40">0.40 s</option><option value="0.50">0.50 s</option></select></label>
+   <label class="setting">Threshold <select id="threshold"><option value="-50">-50 dB</option><option value="-46">-46 dB</option><option value="-42" selected>-42 dB</option><option value="-38">-38 dB</option><option value="-34">-34 dB</option><option value="-30">-30 dB</option></select></label>
+   <button id="silenceBtn" disabled>Remove long pauses</button>
+   <span class="status" id="silenceStatus">Open an audio file to start.</span>
+  </section>
+  <section class="editor">
+   <div class="toolbar">
+    <button id="play" class="icon blue" title="Play / Pause">▶</button>
+    <button id="stop" class="icon dark" title="Stop">■</button>
+    <span class="separator"></span>
+    <button id="cut" class="red" disabled>✂ Cut</button>
+    <button id="copy" class="dark" disabled>▢ Copy</button>
+    <button id="paste" class="dark" disabled>▣ Paste</button>
+    <button id="delete" class="red" disabled>🗑 Delete</button>
+    <button id="clearSel" class="ghost">Deselect</button>
+    <span class="separator"></span>
+    <div class="zoomwrap"><span>ZOOM</span><input id="zoom" type="range" min="1" max="125" value="8" step="1"><span id="zoomValue">8×</span></div>
+    <button id="fit" class="ghost">Fit</button>
+   </div>
+   <div id="timelineScroll"><div id="track"><canvas id="wave"></canvas></div></div>
+   <div class="timeline-footer"><span id="currentTime">00:00.0</span><span id="duration">00:00.0</span><span>1 finger: select · 2 fingers: scroll timeline</span></div>
+  </section>
+  <div class="bottom"><div id="selectionInfo">Select an audio range by dragging one finger across the waveform.</div><div id="playStatus">Ready</div></div>
+ </main>
+ <audio id="player" preload="auto"></audio>
+ <audio id="resultPlayer" preload="auto"></audio>
 </div>
 
-<script type="module">
+<script>
+"use strict";
 const $=id=>document.getElementById(id);
-const file=$("file"),player=$("player"),resultPlayer=$("resultPlayer");
-const canvas=$("wave"),ctx=canvas.getContext("2d"),scroll=$("scroll");
-const AudioCtx=window.AudioContext||window.webkitAudioContext;
-let original=null,work=null,history=[],model=null,transformers=null;
-let fileURL=null,resultURL=null,selection=null,drag=null,dragStartX=0;
-let suggestions=[],aiSegments=[],zoom=5,raf=0,lastDraw=0;
+const file=$("file"),player=$("player"),scroll=$("timelineScroll"),track=$("track"),canvas=$("wave"),ctx=canvas.getContext("2d");
+const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+let original=null,work=null,history=[],redoStack=[],clipboard=null;
+let sourceFileName="",workURL=null,zoom=8,selection=null,gesture=null,pointers=new Map(),raf=0;
+const MIN_SELECT=.025;
 
-function fmt(t){t=Math.max(0,t||0);let m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
-function setStatus(id,s){$(id).textContent=s}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function fmt(t){t=Math.max(0,Number(t)||0);let m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
 function duration(){return work?work.duration:0}
-function timelineWidth(){return Math.max(scroll.clientWidth,Math.ceil(duration()*zoom))}
-function xTime(x){return x/zoom}
-function timeX(t){return t*zoom}
-function pushHistory(label){history.push({buffer:work,label});if(history.length>20)history.shift();$("undo").disabled=!history.length}
-function encodeWav(b){
- const ch=b.numberOfChannels,sr=b.sampleRate,n=b.length,block=ch*2,size=44+n*block,ab=new ArrayBuffer(size),v=new DataView(ab);
+function totalWidth(){return Math.max(scroll.clientWidth,Math.ceil(duration()*zoom))}
+function timeAtClientX(clientX){const r=scroll.getBoundingClientRect();return clamp((scroll.scrollLeft+clientX-r.left)/zoom,0,duration())}
+function setMsg(id,msg){$(id).textContent=msg}
+function cloneSelection(){return selection?{start:selection.start,end:selection.end}:null}
+function saveHistory(label){
+ history.push({buffer:work,label,selection:cloneSelection()});
+ if(history.length>80)history.shift();
+ redoStack=[];
+ updateHistoryButtons();
+}
+function updateHistoryButtons(){$("undo").disabled=!history.length;$("redo").disabled=!redoStack.length}
+function encodeWav(buffer){
+ const ch=buffer.numberOfChannels,sr=buffer.sampleRate,n=buffer.length,block=ch*2,size=44+n*block,ab=new ArrayBuffer(size),v=new DataView(ab);
  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
  ws(0,"RIFF");v.setUint32(4,size-8,true);ws(8,"WAVE");ws(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,sr,true);v.setUint32(28,sr*block,true);v.setUint16(32,block,true);v.setUint16(34,16,true);ws(36,"data");v.setUint32(40,n*block,true);
- const data=Array.from({length:ch},(_,c)=>b.getChannelData(c));let o=44;
+ const data=Array.from({length:ch},(_,c)=>buffer.getChannelData(c));let o=44;
  for(let i=0;i<n;i++)for(let c=0;c<ch;c++){let s=clamp(data[c][i],-1,1);v.setInt16(o,s<0?s*32768:s*32767,true);o+=2}
  return new Blob([ab],{type:"audio/wav"});
 }
-function fromKeptRanges(src,ranges){
+function bufferFromRanges(src,ranges){
  const sr=src.sampleRate,valid=ranges.map(r=>({a:clamp(Math.floor(r.start*sr),0,src.length),b:clamp(Math.ceil(r.end*sr),0,src.length)})).filter(r=>r.b>r.a);
- const n=valid.reduce((s,r)=>s+r.b-r.a,0);if(!n)throw Error("This cut would remove all audio.");
- const out=new AudioCtx().createBuffer(src.numberOfChannels,n,sr);
- for(let c=0;c<src.numberOfChannels;c++){const a=src.getChannelData(c),d=out.getChannelData(c);let p=0;for(const r of valid){const part=a.subarray(r.a,r.b);d.set(part,p);let f=Math.min(Math.floor(sr*.004),Math.floor(part.length/2));for(let i=0;i<f;i++){let g=i/Math.max(1,f);d[p+i]*=g;d[p+part.length-1-i]*=g}p+=part.length}}
+ const n=valid.reduce((s,r)=>s+r.b-r.a,0);if(!n)throw Error("The edit would remove all audio.");
+ const ac=new AudioContextClass(),out=ac.createBuffer(src.numberOfChannels,n,sr);ac.close();
+ for(let c=0;c<src.numberOfChannels;c++){const a=src.getChannelData(c),d=out.getChannelData(c);let p=0;for(const r of valid){const part=a.subarray(r.a,r.b);d.set(part,p);const f=Math.min(Math.floor(sr*.004),Math.floor(part.length/2));for(let i=0;i<f;i++){const g=i/Math.max(1,f);d[p+i]*=g;d[p+part.length-1-i]*=g}p+=part.length}}
  return out;
 }
-function keptAfterCuts(src,cuts){
- cuts=cuts.slice().sort((a,b)=>a.start-b.start);let merged=[];
- for(const c of cuts){let a=clamp(c.start,0,src.duration),b=clamp(c.end,0,src.duration);if(b<=a)continue;let last=merged[merged.length-1];if(last&&a<=last.end)last.end=Math.max(last.end,b);else merged.push({start:a,end:b})}
- let ranges=[],p=0;for(const c of merged){if(c.start>p)ranges.push({start:p,end:c.start});p=Math.max(p,c.end)}if(p<src.duration)ranges.push({start:p,end:src.duration});
- return {buffer:fromKeptRanges(src,ranges),removed:merged};
+function removeRanges(src,cuts){
+ const sorted=cuts.slice().sort((a,b)=>a.start-b.start),merged=[];
+ for(const c of sorted){const a=clamp(c.start,0,src.duration),b=clamp(c.end,0,src.duration);if(b<=a)continue;const last=merged[merged.length-1];if(last&&a<=last.end)last.end=Math.max(last.end,b);else merged.push({start:a,end:b})}
+ const kept=[];let p=0;for(const c of merged){if(c.start>p)kept.push({start:p,end:c.start});p=Math.max(p,c.end)}if(p<src.duration)kept.push({start:p,end:src.duration});
+ return {buffer:bufferFromRanges(src,kept),removed:merged};
 }
-function publish(){
+function extractRange(src,a,b){
+ const sr=src.sampleRate,start=clamp(Math.floor(a*sr),0,src.length),end=clamp(Math.ceil(b*sr),0,src.length),len=end-start;
+ if(len<1)throw Error("Select a longer range first.");
+ const ac=new AudioContextClass(),out=ac.createBuffer(src.numberOfChannels,len,sr);ac.close();
+ for(let c=0;c<src.numberOfChannels;c++)out.copyToChannel(src.getChannelData(c).subarray(start,end),c);
+ return out;
+}
+function insertBufferAt(src,insert,atSeconds){
+ if(src.sampleRate!==insert.sampleRate||src.numberOfChannels!==insert.numberOfChannels)throw Error("Clipboard audio format does not match this recording.");
+ const at=clamp(Math.round(atSeconds*src.sampleRate),0,src.length),outLength=src.length+insert.length;
+ const ac=new AudioContextClass(),out=ac.createBuffer(src.numberOfChannels,outLength,src.sampleRate);ac.close();
+ for(let c=0;c<src.numberOfChannels;c++){
+  const d=out.getChannelData(c),a=src.getChannelData(c),b=insert.getChannelData(c);
+  d.set(a.subarray(0,at),0);d.set(b,at);d.set(a.subarray(at),at+insert.length);
+ }
+ return out;
+}
+function publish(preserveTime=true){
  if(!work)return;
- if(resultURL)URL.revokeObjectURL(resultURL);
- resultURL=URL.createObjectURL(encodeWav(work));
- resultPlayer.src=resultURL;player.src=resultURL;
- $("download").href=resultURL;$("download").download="AI_Audio_Cleaned.wav";$("download").style.display="block";
- $("editInfo").textContent=`Current duration ${work.duration.toFixed(2)} seconds. Every edit is included in the download.`;
- $("reset").disabled=false;$("undo").disabled=!history.length;$("silenceBtn").disabled=false;$("detect").disabled=!model;
- $("duration").textContent=fmt(work.duration);draw();
+ const oldTime=player.currentTime||0;
+ if(workURL)URL.revokeObjectURL(workURL);
+ workURL=URL.createObjectURL(encodeWav(work));player.src=workURL;
+ player.addEventListener("loadedmetadata",()=>{player.currentTime=clamp(oldTime,0,work.duration);},{once:true});
+ $("duration").textContent=fmt(work.duration);
+ $("silenceBtn").disabled=false;
+ $("paste").disabled=!clipboard;
+ updateHistoryButtons();updateSelectionUI();resizeTrack();draw();
+ $("playStatus").textContent="Ready";
+}
+function resizeTrack(){
+ if(!work)return;
+ const w=totalWidth();track.style.width=w+"px";track.style.height="100%";
+ canvas.style.width=Math.max(1,scroll.clientWidth)+"px";
+ canvas.style.height="100%";
+ draw();
 }
 function draw(){
  if(!work)return;
- const w=timelineWidth(),h=190,dpr=Math.min(1.5,window.devicePixelRatio||1);
- canvas.style.width=w+"px";canvas.style.height=h+"px";canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);
- ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle="#0b1019";ctx.fillRect(0,0,w,h);
- // ruler and grid
- const tick=clamp(Math.ceil(50/zoom/5)*5,1,60);
- ctx.font="11px Arial";ctx.fillStyle="#aab5c5";ctx.strokeStyle="#2c394d";ctx.lineWidth=1;
- for(let t=0;t<=work.duration;t+=tick){let x=timeX(t);ctx.beginPath();ctx.moveTo(x,20);ctx.lineTo(x,h);ctx.stroke();ctx.fillText(fmt(t),x+3,13)}
- // stereo peak waveform
+ const w=Math.max(1,scroll.clientWidth),h=Math.max(180,scroll.clientHeight),dpr=Math.min(2,window.devicePixelRatio||1);
+ if(canvas.width!==Math.floor(w*dpr)||canvas.height!==Math.floor(h*dpr)){canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);canvas.style.width=w+"px";canvas.style.height=h+"px"}
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.fillStyle="#0a0f17";ctx.fillRect(0,0,w,h);
+ const offset=scroll.scrollLeft,firstTime=offset/zoom,lastTime=(offset+w)/zoom;
+ const tickSec=zoom>70?0.25:zoom>35?0.5:zoom>15?1:zoom>7?2:zoom>3?5:10;
+ const firstTick=Math.floor(firstTime/tickSec)*tickSec;
+ ctx.font="10px Arial";ctx.textBaseline="top";
+ for(let t=firstTick;t<=Math.min(work.duration,lastTime+tickSec);t+=tickSec){const x=t*zoom-offset;ctx.strokeStyle="#263447";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,20);ctx.lineTo(x,h);ctx.stroke();ctx.fillStyle="#9eacbf";ctx.fillText(fmt(t),x+3,4)}
  const channels=Array.from({length:work.numberOfChannels},(_,c)=>work.getChannelData(c));
- const samples=work.length,px=Math.min(w,Math.ceil(work.duration*zoom));
- ctx.strokeStyle="#54e6a3";ctx.lineWidth=1;
- const centers=work.numberOfChannels>1?[65,135]:[100];
- for(let x=0;x<px;x++){
-   let a=Math.floor(x/zoom*work.sampleRate),b=Math.min(samples,Math.max(a+1,Math.floor((x+1)/zoom*work.sampleRate)));
-   let peaks=channels.map(ch=>{let peak=0,step=Math.max(1,Math.floor((b-a)/30));for(let i=a;i<b;i+=step)peak=Math.max(peak,Math.abs(ch[i]||0));return peak});
-   peaks.forEach((peak,c)=>{let amp=Math.max(1,peak*48),cy=centers[Math.min(c,centers.length-1)];ctx.beginPath();ctx.moveTo(x,cy-amp);ctx.lineTo(x,cy+amp);ctx.stroke()});
+ const sr=work.sampleRate,px=Math.ceil(w);
+ const centers=work.numberOfChannels>1?[h*.38,h*.70]:[h*.54];
+ const ampMax=work.numberOfChannels>1?h*.24:h*.36;
+ ctx.strokeStyle="#55e6a5";ctx.lineWidth=1;
+ for(let x=0;x<pixelWidth;x++){
+  const t=(offset+x)/zoom;if(t>=work.duration)break;
+  const a=Math.max(0,Math.floor(t*sr)),b=Math.min(work.length,Math.max(a+1,Math.floor((offset+x+1)/zoom*sr)));
+  channels.forEach((ch,c)=>{let peak=0;const step=Math.max(1,Math.floor((b-a)/24));for(let i=a;i<b;i+=step){const v=Math.abs(ch[i]||0);if(v>peak)peak=v}const cy=centers[Math.min(c,centers.length-1)],amp=Math.max(1,peak*ampMax);ctx.beginPath();ctx.moveTo(x,cy-amp);ctx.lineTo(x,cy+amp);ctx.stroke()});
  }
- // AI suggested ranges
- for(const s of suggestions){let x=timeX(s.start),ww=Math.max(2,timeX(s.end-s.start));ctx.fillStyle="rgba(224,82,104,.28)";ctx.fillRect(x,22,ww,145);ctx.strokeStyle="#e05268";ctx.lineWidth=1;ctx.strokeRect(x,22,ww,145)}
- // current manual selection
- if(selection){let x=timeX(selection.start),ww=Math.max(1,timeX(selection.end-selection.start));ctx.fillStyle="rgba(255,179,71,.28)";ctx.fillRect(x,20,ww,150);ctx.strokeStyle="#ffb347";ctx.lineWidth=2;ctx.strokeRect(x,20,ww,150);
-   for(let hx of [x,x+ww]){ctx.fillStyle="#ffb347";ctx.fillRect(hx-5,17,10,156)}
- }
- // playhead
- let pxh=timeX(player.currentTime||0);ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(pxh,17);ctx.lineTo(pxh,180);ctx.stroke();
+ // Selection tint and fine boundary handles (visual width stays thin).
+ if(selection){const x1=selection.start*zoom-offset,x2=selection.end*zoom-offset;ctx.fillStyle="rgba(255,179,71,.20)";ctx.fillRect(x1,20,x2-x1,h-25);ctx.strokeStyle="#ffb347";ctx.lineWidth=1.5;ctx.strokeRect(x1,20,x2-x1,h-25);ctx.fillStyle="#ffb347";ctx.fillRect(x1-1,18,3,h-21);ctx.fillRect(x2-1,18,3,h-21);ctx.fillStyle="#ffe0a8";ctx.fillRect(x1-3,Math.max(18,h*.45),7,22);ctx.fillRect(x2-3,Math.max(18,h*.45),7,22)}
+ const playheadX=player.currentTime*zoom-offset;if(playheadX>=0&&playheadX<=w){ctx.strokeStyle="#f5f7fb";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(playheadX,18);ctx.lineTo(playheadX,h);ctx.stroke();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(playheadX,18,4,0,Math.PI*2);ctx.fill()}
  $("currentTime").textContent=fmt(player.currentTime||0);
 }
-function updateSelectionInfo(){
- if(!selection){$("selectionInfo").textContent="No range selected. Drag on the waveform to select audio."; $("trash").disabled=true;return}
- $("selectionInfo").textContent=`Selected ${fmt(selection.start)} – ${fmt(selection.end)} (${(selection.end-selection.start).toFixed(2)} sec). Drag the orange handles to adjust, then tap the trash button.`;
- $("trash").disabled=selection.end-selection.start<.03;
+function updateSelectionUI(){
+ if(!selection){$("selectionInfo").textContent="No range selected · One finger drag selects; two fingers move the timeline.";["cut","copy","delete"].forEach(id=>$(id).disabled=true)}
+ else{$("selectionInfo").textContent=`Selected ${fmt(selection.start)} → ${fmt(selection.end)}  (${(selection.end-selection.start).toFixed(2)} sec)`;["cut","copy","delete"].forEach(id=>$(id).disabled=selection.end-selection.start<MIN_SELECT)}
+ $("paste").disabled=!clipboard;
 }
-function setSelection(a,b){if(!work)return;let x=clamp(Math.min(a,b),0,work.duration),y=clamp(Math.max(a,b),0,work.duration);if(y-x<.03){selection=null}else selection={start:x,end:y};updateSelectionInfo();draw()}
-function seek(t){if(!work)return;player.currentTime=clamp(t,0,work.duration);resultPlayer.currentTime=player.currentTime;draw()}
-$("play").onclick=async()=>{if(!work)return;try{if(player.paused){if(player.currentTime>=work.duration)player.currentTime=0;await player.play();$("play").textContent="Ⅱ"}else{player.pause();$("play").textContent="▶"}}catch(e){setStatus("loadStatus","Playback error: "+e.message)}};
-$("stop").onclick=()=>{player.pause();player.currentTime=0;$("play").textContent="▶";draw()};
-player.addEventListener("play",()=>{$("play").textContent="Ⅱ";cancelAnimationFrame(raf);const tick=()=>{if(player.paused)return;draw();let x=timeX(player.currentTime);if(x<scroll.scrollLeft||x>scroll.scrollLeft+scroll.clientWidth-30)scroll.scrollLeft=Math.max(0,x-80);raf=requestAnimationFrame(tick)};raf=requestAnimationFrame(tick)});
-player.addEventListener("pause",()=>{$("play").textContent="▶";cancelAnimationFrame(raf);draw()});
+function setSelection(a,b){if(!work)return;const x=clamp(Math.min(a,b),0,work.duration),y=clamp(Math.max(a,b),0,work.duration);selection=y-x>=MIN_SELECT?{start:x,end:y}:null;updateSelectionUI();draw()}
+function seek(t){if(!work)return;player.currentTime=clamp(t,0,work.duration);draw()}
+function pushEdit(label,next,clearSelection=true){
+ saveHistory(label);work=next;if(clearSelection)selection=null;publish();
+}
+function deleteSelection(label="Delete selection"){
+ if(!work||!selection)return;
+ const cut={...selection},result=removeRanges(work,[cut]);pushEdit(label,result.buffer,true);
+ setMsg("silenceStatus",`${label}: removed ${ (cut.end-cut.start).toFixed(2)} sec. Earlier edits are preserved.`);
+}
+$("undo").onclick=()=>{
+ if(!history.length)return;
+ redoStack.push({buffer:work,label:"Redo",selection:cloneSelection()});
+ const h=history.pop();work=h.buffer;selection=h.selection;publish();setMsg("silenceStatus",`Undo: ${h.label}. Only the most recent edit was reversed.`);
+};
+$("redo").onclick=()=>{
+ if(!redoStack.length)return;
+ history.push({buffer:work,label:"Undo",selection:cloneSelection()});
+ const h=redoStack.pop();work=h.buffer;selection=h.selection;publish();setMsg("silenceStatus","Redo completed.");
+};
+$("play").onclick=async()=>{if(!work)return;try{if(player.paused){if(player.currentTime>=work.duration)player.currentTime=0;await player.play();$("play").textContent="Ⅱ";$("playStatus").textContent="Playing"}else{player.pause();$("play").textContent="▶";$("playStatus").textContent="Paused"}}catch(e){setMsg("silenceStatus","Playback error: "+e.message)}};
+$("stop").onclick=()=>{player.pause();player.currentTime=0;$("play").textContent="▶";$("playStatus").textContent="Stopped";draw()};
+player.addEventListener("play",()=>{cancelAnimationFrame(raf);const tick=()=>{if(player.paused)return;const x=player.currentTime*zoom;if(x<scroll.scrollLeft||x>scroll.scrollLeft+scroll.clientWidth-20)scroll.scrollLeft=Math.max(0,x-scroll.clientWidth*.35);draw();raf=requestAnimationFrame(tick)};raf=requestAnimationFrame(tick)});
+player.addEventListener("pause",()=>{$("play").textContent="▶";$("playStatus").textContent="Paused";cancelAnimationFrame(raf);draw()});
 player.addEventListener("timeupdate",()=>{if(!raf)draw()});
-resultPlayer.addEventListener("play",()=>{player.currentTime=resultPlayer.currentTime;player.play().catch(()=>{})});
-player.addEventListener("seeked",()=>{resultPlayer.currentTime=player.currentTime;draw()});
-$("zoom").oninput=()=>{let old=zoom;zoom=Number($("zoom").value);let anchor=player.currentTime;draw();scroll.scrollLeft=Math.max(0,timeX(anchor)-scroll.clientWidth/2)};
+player.addEventListener("ended",()=>{$("play").textContent="▶";$("playStatus").textContent="Ended"});
+scroll.addEventListener("scroll",()=>draw(),{passive:true});
+$("zoom").oninput=()=>{const anchor=(scroll.scrollLeft+scroll.clientWidth/2)/zoom;zoom=Number($("zoom").value);$("zoomValue").textContent=zoom+"×";resizeTrack();scroll.scrollLeft=Math.max(0,anchor*zoom-scroll.clientWidth/2);draw()};
+$("fit").onclick=()=>{if(!work)return;zoom=clamp(scroll.clientWidth/work.duration,1,125);$("zoom").value=String(Math.round(zoom));$("zoomValue").textContent=Math.round(zoom)+"×";resizeTrack();scroll.scrollLeft=0;draw()};
+$("clearSel").onclick=()=>{selection=null;updateSelectionUI();draw()};
+
+// Pointer interaction: one pointer = select/adjust; two pointers = horizontal timeline pan.
+// The canvas disables browser touch gestures so the two-finger gesture is handled here.
+function pointerX(e){return timeAtClientX(e.clientX)}
+function selectionHandleAt(t){if(!selection)return null;const px=t*zoom,sa=selection.start*zoom,sb=selection.end*zoom;if(Math.abs(px-sa)<=Math.max(8,10))return "start";if(Math.abs(px-sb)<=10)return "end";return null}
 canvas.addEventListener("pointerdown",e=>{
  if(!work)return;
- const rect=canvas.getBoundingClientRect(),x=clamp(e.clientX-rect.left,0,canvas.clientWidth),t=clamp(x/zoom,0,work.duration);
- const near=selection?Math.abs(x-timeX(selection.start))<18? "start":Math.abs(x-timeX(selection.end))<18?"end":null:null;
- if(near){drag=near;canvas.setPointerCapture(e.pointerId);return}
- drag="new";dragStartX=t;selection={start:t,end:t};seek(t);updateSelectionInfo();draw();canvas.setPointerCapture(e.pointerId);
+ e.preventDefault();canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pointers.size>=2){
+  const vals=[...pointers.values()];gesture={mode:"pan",lastX:(vals[0].x+vals[1].x)/2};return;
+ }
+ const t=pointerX(e),handle=selectionHandleAt(t);
+ if(handle){gesture={mode:handle,pointerId:e.pointerId};return}
+ gesture={mode:"select",pointerId:e.pointerId,start:t,downX:e.clientX,moved:false};
+ selection={start:t,end:t};updateSelectionUI();draw();
 });
 canvas.addEventListener("pointermove",e=>{
- if(!drag||!work)return;const rect=canvas.getBoundingClientRect(),x=clamp(e.clientX-rect.left,0,canvas.clientWidth),t=clamp(x/zoom,0,work.duration);
- if(drag==="new"){selection={start:Math.min(dragStartX,t),end:Math.max(dragStartX,t)}}
- else if(drag==="start")selection.start=Math.min(t,selection.end-.03);
- else if(drag==="end")selection.end=Math.max(t,selection.start+.03);
- updateSelectionInfo();draw();
+ if(!pointers.has(e.pointerId))return;
+ pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pointers.size>=2){
+  const vals=[...pointers.values()],center=(vals[0].x+vals[1].x)/2;
+  if(!gesture||gesture.mode!=="pan")gesture={mode:"pan",lastX:center};
+  const dx=center-gesture.lastX;scroll.scrollLeft=clamp(scroll.scrollLeft-dx,0,Math.max(0,totalWidth()-scroll.clientWidth));gesture.lastX=center;draw();return;
+ }
+ if(!gesture||gesture.pointerId!==e.pointerId)return;
+ const t=pointerX(e);
+ if(gesture.mode==="select"){if(Math.abs(e.clientX-gesture.downX)>5)gesture.moved=true;selection={start:Math.min(gesture.start,t),end:Math.max(gesture.start,t)}}
+ else if(gesture.mode==="start")selection.start=Math.min(t,selection.end-MIN_SELECT);
+ else if(gesture.mode==="end")selection.end=Math.max(t,selection.start+MIN_SELECT);
+ selection.start=clamp(selection.start,0,work.duration);selection.end=clamp(selection.end,selection.start+MIN_SELECT,work.duration);
+ updateSelectionUI();draw();
 });
-function endDrag(){if(drag==="new"&&selection&&selection.end-selection.start<.08){selection=null;updateSelectionInfo();draw()}drag=null}
-canvas.addEventListener("pointerup",endDrag);canvas.addEventListener("pointercancel",endDrag);
-canvas.addEventListener("click",e=>{if(!work||drag)return;const rect=canvas.getBoundingClientRect();seek((e.clientX-rect.left)/zoom)});
-$("clearSel").onclick=()=>{selection=null;updateSelectionInfo();draw()};
-$("trash").onclick=()=>{
- if(!work||!selection)return;
- try{const cut={...selection};const out=keptAfterCuts(work,[cut]);pushHistory("Timeline delete");work=out.buffer;selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("aiStatus",`Deleted ${cut.start.toFixed(2)}–${cut.end.toFixed(2)} seconds. Earlier edits are preserved.`)}
- catch(e){setStatus("loadStatus","Delete failed: "+e.message)}
+function pointerEnd(e){const was=gesture;const tapTime=pointerX(e);pointers.delete(e.pointerId);if(pointers.size===0){gesture=null;if(was&&was.mode==="select"&&!was.moved){selection=null;seek(tapTime)}else if(selection&&selection.end-selection.start<MIN_SELECT)selection=null;updateSelectionUI();draw()}else if(pointers.size===1){const remaining=[...pointers.entries()][0];gesture={mode:"pan",lastX:remaining[1].x};}}
+canvas.addEventListener("pointerup",pointerEnd);canvas.addEventListener("pointercancel",pointerEnd);canvas.addEventListener("lostpointercapture",e=>{pointers.delete(e.pointerId);if(!pointers.size)gesture=null});
+
+// Editing operations
+$("delete").onclick=()=>deleteSelection("Delete");
+$("cut").onclick=()=>{if(!selection)return;try{clipboard=extractRange(work,selection.start,selection.end);$("paste").disabled=false;deleteSelection("Cut");updateSelectionUI()}catch(e){setMsg("silenceStatus","Cut failed: "+e.message)}};
+$("copy").onclick=()=>{if(!selection)return;try{clipboard=extractRange(work,selection.start,selection.end);$("paste").disabled=false;setMsg("silenceStatus",`Copied ${(selection.end-selection.start).toFixed(2)} sec. Move the playhead and tap Paste.`)}catch(e){setMsg("silenceStatus","Copy failed: "+e.message)}};
+$("paste").onclick=()=>{
+ if(!work||!clipboard)return;
+ try{const next=insertBufferAt(work,clipboard,player.currentTime);pushEdit("Paste audio",next,true);setMsg("silenceStatus","Copied audio pasted at the playhead.")}catch(e){setMsg("silenceStatus","Paste failed: "+e.message)}
 };
-$("undo").onclick=()=>{if(!history.length)return;let h=history.pop();work=h.buffer;selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("loadStatus",`Undo: ${h.label}.`)};
-$("reset").onclick=()=>{if(!original)return;if(!confirm("Remove all edits and restore the uploaded original?"))return;work=original;history=[];selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("loadStatus","Original upload restored.")};
+
+// Silence remover acts on the current working audio, so all prior edits remain.
+$("silenceBtn").onclick=async()=>{
+ if(!work)return;
+ const btn=$("silenceBtn");btn.disabled=true;
+ try{
+  const src=work,sr=src.sampleRate,frame=Math.max(1,Math.round(sr*.01)),count=Math.ceil(src.length/frame),threshold=Math.pow(10,Number($("threshold").value)/20),maxFrames=Math.floor(Number($("maxSilence").value)*sr/frame);
+  const channels=Array.from({length:src.numberOfChannels},(_,c)=>src.getChannelData(c)),silent=new Uint8Array(count);
+  setMsg("silenceStatus","Analyzing audio for long pauses…");
+  await new Promise(r=>setTimeout(r,25));
+  for(let f=0;f<count;f++){let sum=0,n=0,a=f*frame,b=Math.min(src.length,a+frame);for(let i=a;i<b;i++)for(const ch of channels){const v=ch[i];sum+=v*v;n++}silent[f]=Math.sqrt(sum/Math.max(1,n))<threshold?1:0}
+  const keep=new Uint8Array(count);keep.fill(1);let removedFrames=0,i=0;
+  while(i<count){if(!silent[i]){i++;continue}const a=i;while(i<count&&silent[i])i++;if(i-a>maxFrames){for(let j=a+maxFrames;j<i;j++){keep[j]=0;removedFrames++}}}
+  const ranges=[];let start=null;for(let f=0;f<count;f++){if(keep[f]&&start===null)start=f*frame;if((!keep[f]||f===count-1)&&start!==null){const end=keep[f]&&f===count-1?src.length:f*frame;ranges.push({start:start/sr,end:end/sr});start=null}}
+  const next=bufferFromRanges(src,ranges);if(work!==src)throw Error("Audio changed during silence analysis. Please try again.");
+  saveHistory("Silence removal");work=next;selection=null;publish();
+  setMsg("silenceStatus",`Silence removal complete · ${(removedFrames*frame/sr).toFixed(2)} sec removed. You can undo this single operation.`);
+ }catch(e){setMsg("silenceStatus","Silence removal failed: "+e.message)}
+ finally{btn.disabled=!work}
+};
 
 file.addEventListener("change",async()=>{
- const f=file.files?.[0];if(!f)return;
+ const f=file.files&&file.files[0];if(!f)return;
+ setMsg("silenceStatus","Loading and decoding audio…");
+ $("silenceBtn").disabled=true;
  try{
-  setStatus("loadStatus","Loading and decoding audio...");
-  const ab=await f.arrayBuffer(),ac=new AudioCtx();const decoded=await ac.decodeAudioData(ab);await ac.close();
-  original=decoded;work=decoded;history=[];suggestions=[];selection=null;
-  $("fileInfo").textContent=`${f.name} · ${(f.size/1048576).toFixed(1)} MB · ${decoded.duration.toFixed(2)} sec`;
-  if(fileURL)URL.revokeObjectURL(fileURL);fileURL=URL.createObjectURL(f);player.src=fileURL;
-  publish();updateSelectionInfo();setStatus("loadStatus","Audio loaded. Use the timeline to play, select and delete.");
- }catch(e){setStatus("loadStatus","Could not decode this file: "+e.message)}
+  const ac=new AudioContextClass(),decoded=await ac.decodeAudioData(await f.arrayBuffer());await ac.close();
+  original=decoded;work=decoded;history=[];redoStack=[];clipboard=null;selection=null;sourceFileName=f.name;
+  $("fileInfo").textContent=`${f.name} · ${(f.size/1048576).toFixed(1)} MB · ${decoded.duration.toFixed(1)} sec`;
+  publish();$("play").disabled=false;$("silenceBtn").disabled=false;
+  zoom=clamp(scroll.clientWidth/decoded.duration,1,125);$("zoom").value=String(Math.round(zoom));$("zoomValue").textContent=Math.round(zoom)+"×";resizeTrack();scroll.scrollLeft=0;
+  setMsg("silenceStatus","Audio ready. Silence removal and timeline editing are available.");
+ }catch(e){setMsg("silenceStatus","Could not open this audio: "+e.message);$("silenceBtn").disabled=true}
 });
-
-$("silenceBtn").onclick=()=>{
- if(!work)return;
- try{
-  const src=work,sr=src.sampleRate,frame=Math.max(1,Math.round(sr*.01)),count=Math.ceil(src.length/frame),threshold=Math.pow(10,Number($("threshold").value)/20),maxF=Math.floor(Number($("maxSilence").value)*sr/frame);
-  const data=Array.from({length:src.numberOfChannels},(_,c)=>src.getChannelData(c)),keep=new Uint8Array(count);let removed=0;
-  for(let f=0;f<count;f++){let sum=0,n=0,a=f*frame,b=Math.min(src.length,a+frame);for(let i=a;i<b;i++)for(const ch of data){sum+=ch[i]*ch[i];n++}keep[f]=Math.sqrt(sum/Math.max(1,n))>=threshold?1:0}
-  let f=0;while(f<count){if(keep[f]){f++;continue}let a=f;while(f<count&&!keep[f])f++;if(f-a<=maxF){for(let j=a;j<f;j++)keep[j]=1}else{for(let j=a;j<a+maxF;j++)keep[j]=1;removed+=f-a-maxF}}
-  let ranges=[],start=null;for(let i=0;i<count;i++){if(keep[i]&&start===null)start=i*frame;if((!keep[i]||i===count-1)&&start!==null){let end=keep[i]&&i===count-1?src.length:i*frame;ranges.push({start:start/sr,end:end/sr});start=null}}
-  const next=fromKeptRanges(src,ranges);pushHistory("Silence removal");work=next;selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("silenceStatus",`Silence removal complete. Approximately ${(removed*frame/sr).toFixed(2)} sec removed. Previous edits remain.`)
- }catch(e){setStatus("silenceStatus","Error: "+e.message)}
-};
-
-let transcriberModule=null;
-$("loadModel").onclick=async()=>{
- try{
-  $("loadModel").disabled=true;setStatus("aiStatus","Loading Transformers.js...");
-  if(!transcriberModule)transcriberModule=await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1");
-  const {pipeline,env}=transcriberModule;env.allowLocalModels=false;env.useBrowserCache=true;
-  model=await pipeline("automatic-speech-recognition","onnx-community/whisper-tiny",{dtype:"q8",progress_callback:p=>{if(p.status==="progress")setStatus("aiStatus",`Downloading model ${Math.round(p.progress||0)}%`)}});
-  $("loadModel").textContent="✓ AI model loaded";$("detect").disabled=!work;setStatus("aiStatus","Model loaded locally in this browser. First download may take time.");
- }catch(e){$("loadModel").disabled=false;setStatus("aiStatus","Model load failed: "+e.message)}
-};
-async function mono16k(buf,start,end){
- const sr=buf.sampleRate,a=Math.floor(start*sr),b=Math.min(buf.length,Math.ceil(end*sr)),len=b-a;
- const mono=new Float32Array(len);for(let c=0;c<buf.numberOfChannels;c++){let ch=buf.getChannelData(c);for(let i=0;i<len;i++)mono[i]+=ch[a+i]/buf.numberOfChannels}
- const off=new OfflineAudioContext(1,Math.ceil(len*16000/sr),16000),ab=off.createBuffer(1,len,sr);ab.copyToChannel(mono,0);let src=off.createBufferSource();src.buffer=ab;src.connect(off.destination);src.start();let out=await off.startRendering();return out.getChannelData(0)
-}
-function norm(t){return t.toLocaleLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim()}
-async function transcribe(buf){
- let segs=[],dur=buf.duration,chunk=18,overlap=2,step=16,total=Math.ceil(dur/step);
- for(let start=0,i=0;start<dur;start+=step,i++){
-  let end=Math.min(dur,start+chunk);setStatus("aiStatus",`Transcribing audio section ${i+1}/${total} (${Math.round(end/dur*100)}%). Keep this page open.`);
-  let audio=await mono16k(buf,start,end),r=await model(audio,{return_timestamps:true,task:"transcribe"});
-  for(const c of (r.chunks||[])){let t=c.timestamp;if(!c.text||!t||!Number.isFinite(t[0])||!Number.isFinite(t[1])||t[1]<=t[0])continue;let text=c.text.trim(),n=norm(text);if(n.length<3)continue;let a=start+t[0],b=start+t[1];if(segs.some(x=>Math.abs(x.start-a)<.45&&x.normal===n))continue;segs.push({text,normal:n,start:a,end:b})}
-  await new Promise(r=>setTimeout(r,25));
- }
- return segs.sort((a,b)=>a.start-b.start)
-}
-function detectSegments(segs){
- const min=Number($("minWords").value),gap=Number($("maxGap").value),groups=new Map();
- // Only compare whole timestamped Whisper segments. No guessed word timestamps.
- for(let i=0;i<segs.length;i++)for(let j=i+1;j<segs.length;j++){
-  const a=segs[i],b=segs[j];if(b.start-a.end>gap)break;
-  const wa=a.normal.split(" "),wb=b.normal.split(" ");if(Math.min(wa.length,wb.length)<min)continue;
-  const shorter=wa.length<=wb.length?wa:wb,longer=wa.length<=wb.length?wb:wa;
-  let common=shorter.length>=min&&longer.join(" ").includes(shorter.join(" "));
-  if(!common)continue;
-  let key=shorter.join(" ");if(!groups.has(key))groups.set(key,{text:shorter.join(" "),occurrences:[]});
-  let g=groups.get(key);for(const s of [a,b])if(!g.occurrences.some(o=>Math.abs(o.start-s.start)<.5))g.occurrences.push({start:s.start,end:s.end});
- }
- return [...groups.values()].filter(g=>g.occurrences.length>1).map(g=>({...g,occurrences:g.occurrences.sort((a,b)=>a.start-b.start)})).sort((a,b)=>b.text.length-a.text.length)
-}
-$("detect").onclick=async()=>{
- if(!model||!work)return;
- $("detect").disabled=true;try{
-  const source=work;setStatus("aiStatus","Starting transcription...");
-  aiSegments=await transcribe(source);if(work!==source)throw Error("Audio changed during analysis. Run detection again.");
-  const groups=detectSegments(aiSegments);suggestions=[];
-  const list=$("aiList");list.innerHTML="";
-  if(!groups.length){list.textContent="No reliable repeated timestamped segments found. This does not prove there are no retakes.";setStatus("aiStatus","Analysis finished. No reliable repeated segments found.");return}
-  groups.forEach((g,gi)=>{
-   const box=document.createElement("div");box.className="suggestion";
-   const p=document.createElement("p");p.innerHTML="";p.textContent=`Possible repeated speech #${gi+1}: “${g.text}”`;box.append(p);
-   g.occurrences.forEach((o,oi)=>{
-    const isLast=oi===g.occurrences.length-1;
-    const meta=document.createElement("p");meta.className="meta";meta.textContent=`Attempt ${oi+1}: ${o.start.toFixed(2)}–${o.end.toFixed(2)} sec ${isLast?"(last attempt — keep by default)":"(earlier attempt — review)"}`;box.append(meta);
-    if(!isLast){const btn=document.createElement("button");btn.className="blue";btn.textContent="Show this attempt on timeline";btn.onclick=()=>{selection={start:o.start,end:o.end};updateSelectionInfo();draw();scroll.scrollLeft=Math.max(0,timeX(o.start)-80);seek(o.start)};box.append(btn);suggestions.push({start:o.start,end:o.end})}
-   });list.append(box);
-  });
-  draw();setStatus("aiStatus",`Analysis complete. ${suggestions.length} earlier attempt(s) highlighted in red. Tap a suggestion to inspect it; delete only after listening.`);
- }catch(e){console.error(e);setStatus("aiStatus","Detection failed: "+e.message)}
- finally{$("detect").disabled=!work||!model}
-};
-window.addEventListener("resize",()=>draw());
-updateSelectionInfo();
+window.addEventListener("resize",()=>{if(work){resizeTrack();draw()}});
+updateSelectionUI();updateHistoryButtons();
 </script>
 </body>
 </html>
