@@ -2,605 +2,332 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Audio Cleaner V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>AI Audio Cleaner — Timeline Editor</title>
 <style>
+:root{--bg:#0d111b;--panel:#1b2433;--panel2:#263247;--green:#54e6a3;--blue:#3478f6;--red:#e05268;--orange:#ffb347;--muted:#aab5c5}
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#10131c;color:#fff;font-family:Arial,sans-serif}
-.container{max-width:560px;margin:auto}
-h1{text-align:center;color:#55e6a5}
-.subtitle{text-align:center;color:#aaa;font-size:14px}
-.card{background:#1c2230;padding:18px;border-radius:15px;margin-top:18px}
-h2,h3{color:#55e6a5;margin-top:0}
-.upload{display:block;padding:24px;text-align:center;border:2px dashed #55e6a5;border-radius:12px;cursor:pointer;color:#55e6a5}
-input[type=file]{display:none}
-label{display:block;margin:14px 0 8px}
-input[type=range]{width:100%}
-button{width:100%;padding:13px;border:0;border-radius:9px;background:#55e6a5;color:#10131c;font-size:15px;font-weight:bold;margin-top:12px;cursor:pointer}
+body{margin:0;background:var(--bg);color:#f5f7fb;font:15px Arial,sans-serif}
+.app{max-width:900px;margin:auto;padding:14px}
+h1{font-size:24px;text-align:center;color:var(--green);margin:10px 0 4px}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 16px}
+.card{background:var(--panel);border-radius:14px;padding:15px;margin:14px 0}
+h2{font-size:18px;color:var(--green);margin:0 0 12px}
+.info{font-size:12px;line-height:1.55;color:var(--muted)}
+button,select,input{font:inherit}
+button{border:0;border-radius:9px;padding:12px 14px;font-weight:700;background:var(--green);color:#101722;cursor:pointer}
 button:disabled{opacity:.4;cursor:not-allowed}
-.secondary{background:#3478f6;color:white}
-.danger{background:#c84b61;color:white}
+button.blue{background:var(--blue);color:white}
+button.red{background:var(--red);color:white}
+button.dark{background:#344258;color:white}
+button.icon{width:48px;height:44px;padding:0;font-size:21px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.upload{display:block;border:2px dashed var(--green);border-radius:10px;padding:22px;text-align:center;color:var(--green);cursor:pointer}
+input[type=file]{display:none}
 audio{width:100%;margin-top:10px}
-.info{color:#aaa;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
-.status{color:#55e6a5;text-align:center;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6}
-.download{display:block;background:#3478f6;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:9px;margin-top:12px}
-.item{background:#293244;padding:14px;border-radius:10px;margin-top:12px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
-.row{display:flex;gap:8px;align-items:center}
-.row>*{flex:1;min-width:0}
-.smallbtn{font-size:13px;padding:10px;margin-top:8px}
-.timegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.timegrid input,select{width:100%;padding:10px;background:#10131c;color:white;border:1px solid #586174;border-radius:7px}
-.rtcheckbox{width:20px;height:20px;flex-shrink:0}
-.note{background:#332d20;border-left:3px solid #e7b44b;padding:10px;border-radius:6px;color:#e9d6a6;font-size:12px;line-height:1.5}
-.good{color:#55e6a5}
-#waveCanvas{width:800px;max-width:none;cursor:crosshair;touch-action:pan-y}
-.cut-row{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;background:#202a3b;padding:10px;border-radius:9px;margin-top:9px}
-.cut-row.active{outline:2px solid #ffb347;background:#30394c}
-.cut-row input[type=checkbox]{width:21px;height:21px}
-.cut-row button{margin:0;padding:9px;font-size:12px}
-.attempt-meta{font-size:12px;color:#aeb8c8;line-height:1.5}
+.status{color:var(--green);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+select{width:100%;padding:11px;background:#101722;color:white;border:1px solid #59677c;border-radius:8px}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.settings label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.timeline-shell{background:#0b1019;border:1px solid #46536a;border-radius:10px;overflow:hidden}
+.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px;background:#151e2c;border-bottom:1px solid #3b475c}
+.toolbar button{flex:0 0 auto}
+.toolbar .spacer{flex:1}
+#zoom{width:120px;accent-color:var(--green)}
+#scroll{overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y;overscroll-behavior-x:contain}
+#wave{display:block;height:190px;touch-action:pan-y;cursor:crosshair}
+.timebar{display:flex;justify-content:space-between;padding:6px 9px;background:#151e2c;color:var(--muted);font-size:11px}
+.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding:8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+#aiList .suggestion{background:var(--panel2);border-radius:10px;padding:12px;margin-top:10px}
+.suggestion p{margin:7px 0;line-height:1.5;overflow-wrap:anywhere}
+.suggestion button{padding:9px 11px;font-size:12px}
+.suggestion .meta{font-size:12px;color:var(--muted)}
+#undo{width:100%}
+#download{display:block;text-align:center;text-decoration:none;background:var(--blue);color:white;padding:13px;border-radius:9px;margin-top:10px;font-weight:bold}
+@media(max-width:520px){.app{padding:9px}.settings{grid-template-columns:1fr}.toolbar{gap:5px}.toolbar button{padding:10px}.toolbar .icon{width:42px}.card{padding:12px}}
 </style>
 </head>
 <body>
-<div class="container">
+<div class="app">
 <h1>AI Audio Cleaner</h1>
-<p class="subtitle">Silence Remover + AI Retake Review + Manual Editing</p>
+<p class="sub">Silence Remover · AI Retake Suggestions · Timeline Editing</p>
 
-<div class="card">
-<label class="upload" for="audioFile">🎵<br><br><b>Select Your Audio File</b><br><small>MP3 / WAV / M4A / supported browser formats</small></label>
-<input type="file" id="audioFile" accept="audio/*">
-<p id="fileName" class="info">No audio selected.</p>
-<audio id="mainAudio" controls></audio>
-<p id="audioState" class="info">The original upload is kept separately. All edits are applied cumulatively to the working audio.</p>
-</div>
+<section class="card">
+<label class="upload" for="file">🎵<br><br><b>Choose audio file</b><br><small>MP3 / WAV / M4A / supported audio</small></label>
+<input id="file" type="file" accept="audio/*">
+<p id="fileInfo" class="info">No audio loaded.</p>
+<p class="info">The audio player below controls the same working audio shown in the timeline.</p>
+<audio id="player" controls preload="metadata"></audio>
+<p id="loadStatus" class="status">Choose an audio file to begin.</p>
+</section>
 
-<div class="card">
-<h3>⚙️ Silence Remover</h3>
-<label>Maximum silence: <span id="gapValue">0.10</span> seconds</label>
-<input type="range" id="maxGap" min="0.05" max="0.50" step="0.01" value="0.10">
-<label>Silence detection threshold: <span id="thresholdValue">-42</span> dB</label>
-<input type="range" id="threshold" min="-60" max="-20" step="1" value="-42">
-<p class="info">Long silent regions are shortened to the selected maximum duration. Quiet speech may be affected if the threshold is set too high.</p>
-<button id="silenceBtn" disabled>✂️ Remove Long Pauses</button>
-<p id="silenceStatus" class="status">Waiting for audio...</p>
+<section class="card">
+<h2>🎚️ Timeline Editor</h2>
+<p class="info">Tap anywhere on the waveform to move the playhead. Drag across the waveform to select a range. Drag either orange handle to adjust its edges. Use the trash button to remove the selected range.</p>
+<div class="timeline-shell">
+ <div class="toolbar">
+  <button id="play" class="icon blue" title="Play / Pause">▶</button>
+  <button id="stop" class="icon dark" title="Stop">■</button>
+  <button id="trash" class="icon red" title="Delete selected range" disabled>🗑</button>
+  <button id="clearSel" class="dark" title="Clear selection">Clear selection</button>
+  <span class="spacer"></span>
+  <span style="font-size:11px;color:#b8c3d4">Zoom</span>
+  <input id="zoom" type="range" min="2" max="18" value="5" step="1">
+ </div>
+ <div id="scroll"><canvas id="wave" width="800" height="190"></canvas></div>
+ <div class="timebar"><span id="currentTime">00:00.0</span><span id="duration">00:00.0</span></div>
+ <div class="legend">
+  <span><i class="dot" style="background:#54e6a3"></i>Waveform</span>
+  <span><i class="dot" style="background:#e05268"></i>AI suggestion</span>
+  <span><i class="dot" style="background:#ffb347"></i>Manual selection</span>
+ </div>
 </div>
+<p id="selectionInfo" class="status">No range selected.</p>
+</section>
 
-<div class="card">
-<h3>🧠 AI Retake & Duplicate Remover</h3>
-<p class="info">The AI checks the current working audio (including any silence edits already applied). Review each suggestion and listen before approving a cut.</p>
-<div class="note">Important: Whisper timestamps are approximate segment timestamps, not guaranteed word-perfect boundaries. Always preview and adjust the cut range before applying it. Mixed Bangla-English speech recognition quality can vary.</div>
-<div class="item">
-<b>Local AI Model</b>
-<p class="info">Whisper Tiny multilingual · Runs in your browser after model download. The model is cached by the browser when possible.</p>
-<button id="loadModelBtn">⬇ Load / Download AI Model</button>
-<p id="modelStatus" class="status">AI model not loaded.</p>
+<section class="card">
+<h2>✂️ Silence Remover</h2>
+<div class="settings">
+ <div><label>Maximum silence to keep (seconds)</label><select id="maxSilence"><option>0.10</option><option>0.15</option><option>0.20</option><option>0.25</option><option>0.30</option><option>0.40</option><option>0.50</option></select></div>
+ <div><label>Silence threshold</label><select id="threshold"><option value="-48">-48 dB (quiet speech safer)</option><option value="-42" selected>-42 dB</option><option value="-36">-36 dB</option><option value="-30">-30 dB</option></select></div>
 </div>
-<div class="item">
-<b>Detection Settings</b>
-<label class="info">Minimum matching words</label>
-<select id="minWords">
-<option value="2">2 words (very sensitive)</option>
-<option value="3" selected>3 words (sensitive)</option>
-<option value="4">4 words</option>
-<option value="5">5 words (strict)</option>
-<option value="7">7 words (very strict)</option>
-</select>
-<label class="info">Maximum time between attempts</label>
-<p class="info">This is the maximum time gap between two matching phrases for grouping them as the same retake. It is NOT the silence length to remove.</p>
-<select id="maxRetakeGap">
-<option value="10">10 seconds</option>
-<option value="20" selected>20 seconds</option>
-<option value="30">30 seconds</option>
-<option value="60">60 seconds</option>
-</select>
-</div>
-<button id="detectBtn" disabled>🔍 Detect Retakes & Duplicates</button>
-<p id="retakeStatus" class="status">Upload audio, then load the model.</p>
-<div class="item" id="timelinePanel">
-  <b>🎚️ Audio Timeline — drag the orange handles to adjust a cut</b>
-  <p class="info">Tap a detected attempt below to focus it. Drag the left/right handles on the waveform to shorten or extend the selected cut. Pinch zoom is not required; use the zoom slider.</p>
-  <label class="info">Timeline zoom: <span id="zoomLabel">8</span> px/sec</label>
-  <input type="range" id="timelineZoom" min="2" max="20" value="8" step="1">
-  <div id="waveScroll" style="overflow-x:auto;overflow-y:hidden;background:#111722;border:1px solid #4a5365;border-radius:8px;touch-action:pan-y">
-    <canvas id="waveCanvas" width="800" height="180" style="display:block;height:180px"></canvas>
-  </div>
-  <div class="timegrid" style="margin-top:10px">
-    <div><label>Cut start (sec)</label><input type="number" id="cutStart" min="0" step="0.01"></div>
-    <div><label>Cut end (sec)</label><input type="number" id="cutEnd" min="0" step="0.01"></div>
-  </div>
-  <p class="info" id="activeCutInfo">No cut range selected. Select an AI suggestion below.</p>
-</div>
-<div id="retakeResults"></div>
+<button id="silenceBtn" disabled style="width:100%;margin-top:12px">✂ Remove long pauses</button>
+<p id="silenceStatus" class="status">Waiting for audio.</p>
+</section>
+
+<section class="card">
+<h2>🧠 AI Retake & Duplicate Suggestions</h2>
+<p class="info">Load the multilingual Whisper model, then run detection. This version only creates a cut suggestion when repeated recognized segments have usable segment timestamps. It does not invent word-level timestamps. Always listen before deleting.</p>
 <div class="row">
-<button id="selectAllBtn" class="secondary" disabled>Select All</button>
-<button id="clearAllBtn" class="secondary" disabled>Clear Selection</button>
+ <button id="loadModel" class="blue">Load local AI model</button>
+ <button id="detect" disabled>Detect repeats</button>
 </div>
-<button id="applyRetakesBtn" disabled>✂️ Apply Selected Retake Cuts</button>
+<p id="aiStatus" class="status">AI model not loaded.</p>
+<div class="settings">
+ <div><label>Minimum matching words</label><select id="minWords"><option value="2">2 words</option><option value="3" selected>3 words</option><option value="4">4 words</option><option value="5">5 words</option><option value="7">7 words</option></select></div>
+ <div><label>Maximum gap between attempts</label><select id="maxGap"><option value="10">10 seconds</option><option value="20" selected>20 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select></div>
 </div>
+<p class="info">Maximum gap means the largest time difference allowed between two matching spoken segments for them to be grouped as a possible retake. It is not the silence-removal duration.</p>
+<div id="aiList"></div>
+</section>
 
-<div class="card">
-<h3>🎧 Preview / Manual Cut</h3>
-<p class="info">You can preview a selected audio range with surrounding context and cut it manually. Times refer to the current working audio.</p>
-<div class="timegrid">
-<div><label>Start (seconds)</label><input type="number" id="manualStart" min="0" step="0.01" value="0"></div>
-<div><label>End (seconds)</label><input type="number" id="manualEnd" min="0" step="0.01" value="0"></div>
-</div>
-<button id="previewManualBtn" class="secondary" disabled>▶ Preview Selected Range (+ context)</button>
-<audio id="previewAudio" controls></audio>
-<button id="applyManualBtn" class="danger" disabled>✂️ Cut This Range</button>
-<p id="manualStatus" class="status">Load an audio file to enable manual editing.</p>
-</div>
-
-<div class="card">
-<h3>✅ Current Edited Audio</h3>
-<audio id="editedAudio" controls></audio>
-<a id="downloadBtn" class="download" style="display:none">⬇ Download Current Edited WAV</a>
-<p id="resultInfo" class="info">No edits applied yet.</p>
-<button id="undoBtn" class="secondary" disabled>↶ Undo Last Edit</button>
-<button id="resetBtn" class="danger" disabled>Reset to Original Upload</button>
-</div>
+<section class="card">
+<h2>✅ Current edited audio</h2>
+<p id="editInfo" class="info">Edits are cumulative. Removing a range after silence removal keeps the silence edit already made.</p>
+<audio id="resultPlayer" controls></audio>
+<a id="download" style="display:none">⬇ Download edited WAV</a>
+<button id="undo" class="blue" disabled style="margin-top:10px">↶ Undo last edit</button>
+<button id="reset" class="red" disabled style="width:100%;margin-top:9px">Reset to original upload</button>
+</section>
 </div>
 
 <script type="module">
-const $ = id => document.getElementById(id);
-const fileInput = $("audioFile");
-const mainAudio = $("mainAudio");
-const editedAudio = $("editedAudio");
-const previewAudio = $("previewAudio");
-const downloadBtn = $("downloadBtn");
+const $=id=>document.getElementById(id);
+const file=$("file"),player=$("player"),resultPlayer=$("resultPlayer");
+const canvas=$("wave"),ctx=canvas.getContext("2d"),scroll=$("scroll");
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+let original=null,work=null,history=[],model=null,transformers=null;
+let fileURL=null,resultURL=null,selection=null,drag=null,dragStartX=0;
+let suggestions=[],aiSegments=[],zoom=5,raf=0,lastDraw=0;
 
-let originalBuffer = null;
-let workingBuffer = null;
-let history = [];
-let originalURL = null;
-let workingURL = null;
-let previewURL = null;
-let model = null;
-let transformerModule = null;
-let detectedGroups = [];
-let detectionBufferRef = null;
-
-const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-
-function setStatus(id, message){ $(id).textContent = message; }
-
-function revoke(url){ if(url) URL.revokeObjectURL(url); }
-
-function updateUI(){
-  const ready = !!workingBuffer;
-  $("silenceBtn").disabled = !ready;
-  $("detectBtn").disabled = !ready || !model;
-  $("previewManualBtn").disabled = !ready;
-  $("applyManualBtn").disabled = !ready;
-  $("resetBtn").disabled = !originalBuffer || workingBuffer === originalBuffer;
-  $("undoBtn").disabled = history.length === 0;
-  if(ready){
-    $("manualEnd").max = workingBuffer.duration.toFixed(2);
-    if(Number($("manualEnd").value) <= 0) $("manualEnd").value = workingBuffer.duration.toFixed(2);
-    $("audioState").textContent = `Current working audio: ${workingBuffer.duration.toFixed(2)} sec. All new edits apply to this version.`;
-  }
+function fmt(t){t=Math.max(0,t||0);let m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
+function setStatus(id,s){$(id).textContent=s}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function duration(){return work?work.duration:0}
+function timelineWidth(){return Math.max(scroll.clientWidth,Math.ceil(duration()*zoom))}
+function xTime(x){return x/zoom}
+function timeX(t){return t*zoom}
+function pushHistory(label){history.push({buffer:work,label});if(history.length>20)history.shift();$("undo").disabled=!history.length}
+function encodeWav(b){
+ const ch=b.numberOfChannels,sr=b.sampleRate,n=b.length,block=ch*2,size=44+n*block,ab=new ArrayBuffer(size),v=new DataView(ab);
+ const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+ ws(0,"RIFF");v.setUint32(4,size-8,true);ws(8,"WAVE");ws(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,sr,true);v.setUint32(28,sr*block,true);v.setUint16(32,block,true);v.setUint16(34,16,true);ws(36,"data");v.setUint32(40,n*block,true);
+ const data=Array.from({length:ch},(_,c)=>b.getChannelData(c));let o=44;
+ for(let i=0;i<n;i++)for(let c=0;c<ch;c++){let s=clamp(data[c][i],-1,1);v.setInt16(o,s<0?s*32768:s*32767,true);o+=2}
+ return new Blob([ab],{type:"audio/wav"});
 }
-
-function pushHistory(label){
-  history.push({buffer: workingBuffer, label});
-  if(history.length > 12) history.shift();
-  updateUI();
+function fromKeptRanges(src,ranges){
+ const sr=src.sampleRate,valid=ranges.map(r=>({a:clamp(Math.floor(r.start*sr),0,src.length),b:clamp(Math.ceil(r.end*sr),0,src.length)})).filter(r=>r.b>r.a);
+ const n=valid.reduce((s,r)=>s+r.b-r.a,0);if(!n)throw Error("This cut would remove all audio.");
+ const out=new AudioCtx().createBuffer(src.numberOfChannels,n,sr);
+ for(let c=0;c<src.numberOfChannels;c++){const a=src.getChannelData(c),d=out.getChannelData(c);let p=0;for(const r of valid){const part=a.subarray(r.a,r.b);d.set(part,p);let f=Math.min(Math.floor(sr*.004),Math.floor(part.length/2));for(let i=0;i<f;i++){let g=i/Math.max(1,f);d[p+i]*=g;d[p+part.length-1-i]*=g}p+=part.length}}
+ return out;
 }
-
-function makeBufferFromRanges(source, ranges){
-  const sr = source.sampleRate;
-  const valid = ranges.map(r => ({
-    start: Math.max(0, Math.min(source.length, Math.floor(r.start * sr))),
-    end: Math.max(0, Math.min(source.length, Math.ceil(r.end * sr)))
-  })).filter(r => r.end > r.start);
-  const total = valid.reduce((s,r)=>s+r.end-r.start,0);
-  if(!total) throw new Error("No audio remains after this edit.");
-  const ctx = new AudioContextClass();
-  const out = ctx.createBuffer(source.numberOfChannels,total,sr);
-  for(let c=0;c<source.numberOfChannels;c++){
-    const src=source.getChannelData(c), dst=out.getChannelData(c);
-    let pos=0;
-    for(const r of valid){
-      const part=src.subarray(r.start,r.end);
-      dst.set(part,pos);
-      const fade=Math.min(Math.floor(sr*0.004),Math.floor(part.length/2));
-      for(let i=0;i<fade;i++){
-        const g=i/Math.max(1,fade);
-        dst[pos+i]*=g;
-        dst[pos+part.length-1-i]*=g;
-      }
-      pos+=part.length;
-    }
-  }
-  ctx.close();
-  return out;
+function keptAfterCuts(src,cuts){
+ cuts=cuts.slice().sort((a,b)=>a.start-b.start);let merged=[];
+ for(const c of cuts){let a=clamp(c.start,0,src.duration),b=clamp(c.end,0,src.duration);if(b<=a)continue;let last=merged[merged.length-1];if(last&&a<=last.end)last.end=Math.max(last.end,b);else merged.push({start:a,end:b})}
+ let ranges=[],p=0;for(const c of merged){if(c.start>p)ranges.push({start:p,end:c.start});p=Math.max(p,c.end)}if(p<src.duration)ranges.push({start:p,end:src.duration});
+ return {buffer:fromKeptRanges(src,ranges),removed:merged};
 }
-
-function encodeWav(buffer){
-  const channels=buffer.numberOfChannels, sr=buffer.sampleRate, length=buffer.length;
-  const block=channels*2, bytes=44+length*block;
-  const ab=new ArrayBuffer(bytes), v=new DataView(ab);
-  const str=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
-  str(0,"RIFF");v.setUint32(4,bytes-8,true);str(8,"WAVE");str(12,"fmt ");
-  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);
-  v.setUint32(24,sr,true);v.setUint32(28,sr*block,true);v.setUint16(32,block,true);v.setUint16(34,16,true);
-  str(36,"data");v.setUint32(40,length*block,true);
-  const data=Array.from({length:channels},(_,c)=>buffer.getChannelData(c));
-  let off=44;
-  for(let i=0;i<length;i++)for(let c=0;c<channels;c++){
-    const s=Math.max(-1,Math.min(1,data[c][i]));
-    v.setInt16(off,s<0?s*32768:s*32767,true);off+=2;
-  }
-  return new Blob([ab],{type:"audio/wav"});
+function publish(){
+ if(!work)return;
+ if(resultURL)URL.revokeObjectURL(resultURL);
+ resultURL=URL.createObjectURL(encodeWav(work));
+ resultPlayer.src=resultURL;player.src=resultURL;
+ $("download").href=resultURL;$("download").download="AI_Audio_Cleaned.wav";$("download").style.display="block";
+ $("editInfo").textContent=`Current duration ${work.duration.toFixed(2)} seconds. Every edit is included in the download.`;
+ $("reset").disabled=false;$("undo").disabled=!history.length;$("silenceBtn").disabled=false;$("detect").disabled=!model;
+ $("duration").textContent=fmt(work.duration);draw();
 }
-
-function publishWorkingAudio(){
-  revoke(workingURL);
-  const blob=encodeWav(workingBuffer);
-  workingURL=URL.createObjectURL(blob);
-  editedAudio.src=workingURL;
-  mainAudio.src=workingURL;
-  downloadBtn.href=workingURL;
-  downloadBtn.download="AI_Audio_Cleaned.wav";
-  downloadBtn.style.display="block";
-  $("resultInfo").textContent=`Current edited duration: ${workingBuffer.duration.toFixed(2)} sec. Download includes every edit applied so far.`;
-  updateUI();
-  drawTimeline();
+function draw(){
+ if(!work)return;
+ const w=timelineWidth(),h=190,dpr=Math.min(1.5,window.devicePixelRatio||1);
+ canvas.style.width=w+"px";canvas.style.height=h+"px";canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle="#0b1019";ctx.fillRect(0,0,w,h);
+ // ruler and grid
+ const tick=clamp(Math.ceil(50/zoom/5)*5,1,60);
+ ctx.font="11px Arial";ctx.fillStyle="#aab5c5";ctx.strokeStyle="#2c394d";ctx.lineWidth=1;
+ for(let t=0;t<=work.duration;t+=tick){let x=timeX(t);ctx.beginPath();ctx.moveTo(x,20);ctx.lineTo(x,h);ctx.stroke();ctx.fillText(fmt(t),x+3,13)}
+ // stereo peak waveform
+ const channels=Array.from({length:work.numberOfChannels},(_,c)=>work.getChannelData(c));
+ const samples=work.length,px=Math.min(w,Math.ceil(work.duration*zoom));
+ ctx.strokeStyle="#54e6a3";ctx.lineWidth=1;
+ const centers=work.numberOfChannels>1?[65,135]:[100];
+ for(let x=0;x<px;x++){
+   let a=Math.floor(x/zoom*work.sampleRate),b=Math.min(samples,Math.max(a+1,Math.floor((x+1)/zoom*work.sampleRate)));
+   let peaks=channels.map(ch=>{let peak=0,step=Math.max(1,Math.floor((b-a)/30));for(let i=a;i<b;i+=step)peak=Math.max(peak,Math.abs(ch[i]||0));return peak});
+   peaks.forEach((peak,c)=>{let amp=Math.max(1,peak*48),cy=centers[Math.min(c,centers.length-1)];ctx.beginPath();ctx.moveTo(x,cy-amp);ctx.lineTo(x,cy+amp);ctx.stroke()});
+ }
+ // AI suggested ranges
+ for(const s of suggestions){let x=timeX(s.start),ww=Math.max(2,timeX(s.end-s.start));ctx.fillStyle="rgba(224,82,104,.28)";ctx.fillRect(x,22,ww,145);ctx.strokeStyle="#e05268";ctx.lineWidth=1;ctx.strokeRect(x,22,ww,145)}
+ // current manual selection
+ if(selection){let x=timeX(selection.start),ww=Math.max(1,timeX(selection.end-selection.start));ctx.fillStyle="rgba(255,179,71,.28)";ctx.fillRect(x,20,ww,150);ctx.strokeStyle="#ffb347";ctx.lineWidth=2;ctx.strokeRect(x,20,ww,150);
+   for(let hx of [x,x+ww]){ctx.fillStyle="#ffb347";ctx.fillRect(hx-5,17,10,156)}
+ }
+ // playhead
+ let pxh=timeX(player.currentTime||0);ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(pxh,17);ctx.lineTo(pxh,180);ctx.stroke();
+ $("currentTime").textContent=fmt(player.currentTime||0);
 }
+function updateSelectionInfo(){
+ if(!selection){$("selectionInfo").textContent="No range selected. Drag on the waveform to select audio."; $("trash").disabled=true;return}
+ $("selectionInfo").textContent=`Selected ${fmt(selection.start)} – ${fmt(selection.end)} (${(selection.end-selection.start).toFixed(2)} sec). Drag the orange handles to adjust, then tap the trash button.`;
+ $("trash").disabled=selection.end-selection.start<.03;
+}
+function setSelection(a,b){if(!work)return;let x=clamp(Math.min(a,b),0,work.duration),y=clamp(Math.max(a,b),0,work.duration);if(y-x<.03){selection=null}else selection={start:x,end:y};updateSelectionInfo();draw()}
+function seek(t){if(!work)return;player.currentTime=clamp(t,0,work.duration);resultPlayer.currentTime=player.currentTime;draw()}
+$("play").onclick=async()=>{if(!work)return;try{if(player.paused){if(player.currentTime>=work.duration)player.currentTime=0;await player.play();$("play").textContent="Ⅱ"}else{player.pause();$("play").textContent="▶"}}catch(e){setStatus("loadStatus","Playback error: "+e.message)}};
+$("stop").onclick=()=>{player.pause();player.currentTime=0;$("play").textContent="▶";draw()};
+player.addEventListener("play",()=>{$("play").textContent="Ⅱ";cancelAnimationFrame(raf);const tick=()=>{if(player.paused)return;draw();let x=timeX(player.currentTime);if(x<scroll.scrollLeft||x>scroll.scrollLeft+scroll.clientWidth-30)scroll.scrollLeft=Math.max(0,x-80);raf=requestAnimationFrame(tick)};raf=requestAnimationFrame(tick)});
+player.addEventListener("pause",()=>{$("play").textContent="▶";cancelAnimationFrame(raf);draw()});
+player.addEventListener("timeupdate",()=>{if(!raf)draw()});
+resultPlayer.addEventListener("play",()=>{player.currentTime=resultPlayer.currentTime;player.play().catch(()=>{})});
+player.addEventListener("seeked",()=>{resultPlayer.currentTime=player.currentTime;draw()});
+$("zoom").oninput=()=>{let old=zoom;zoom=Number($("zoom").value);let anchor=player.currentTime;draw();scroll.scrollLeft=Math.max(0,timeX(anchor)-scroll.clientWidth/2)};
+canvas.addEventListener("pointerdown",e=>{
+ if(!work)return;
+ const rect=canvas.getBoundingClientRect(),x=clamp(e.clientX-rect.left,0,canvas.clientWidth),t=clamp(x/zoom,0,work.duration);
+ const near=selection?Math.abs(x-timeX(selection.start))<18? "start":Math.abs(x-timeX(selection.end))<18?"end":null:null;
+ if(near){drag=near;canvas.setPointerCapture(e.pointerId);return}
+ drag="new";dragStartX=t;selection={start:t,end:t};seek(t);updateSelectionInfo();draw();canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove",e=>{
+ if(!drag||!work)return;const rect=canvas.getBoundingClientRect(),x=clamp(e.clientX-rect.left,0,canvas.clientWidth),t=clamp(x/zoom,0,work.duration);
+ if(drag==="new"){selection={start:Math.min(dragStartX,t),end:Math.max(dragStartX,t)}}
+ else if(drag==="start")selection.start=Math.min(t,selection.end-.03);
+ else if(drag==="end")selection.end=Math.max(t,selection.start+.03);
+ updateSelectionInfo();draw();
+});
+function endDrag(){if(drag==="new"&&selection&&selection.end-selection.start<.08){selection=null;updateSelectionInfo();draw()}drag=null}
+canvas.addEventListener("pointerup",endDrag);canvas.addEventListener("pointercancel",endDrag);
+canvas.addEventListener("click",e=>{if(!work||drag)return;const rect=canvas.getBoundingClientRect();seek((e.clientX-rect.left)/zoom)});
+$("clearSel").onclick=()=>{selection=null;updateSelectionInfo();draw()};
+$("trash").onclick=()=>{
+ if(!work||!selection)return;
+ try{const cut={...selection};const out=keptAfterCuts(work,[cut]);pushHistory("Timeline delete");work=out.buffer;selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("aiStatus",`Deleted ${cut.start.toFixed(2)}–${cut.end.toFixed(2)} seconds. Earlier edits are preserved.`)}
+ catch(e){setStatus("loadStatus","Delete failed: "+e.message)}
+};
+$("undo").onclick=()=>{if(!history.length)return;let h=history.pop();work=h.buffer;selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("loadStatus",`Undo: ${h.label}.`)};
+$("reset").onclick=()=>{if(!original)return;if(!confirm("Remove all edits and restore the uploaded original?"))return;work=original;history=[];selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("loadStatus","Original upload restored.")};
 
-fileInput.addEventListener("change",async()=>{
-  const file=fileInput.files?.[0]; if(!file)return;
-  setStatus("silenceStatus","Decoding audio...");
-  $("fileName").textContent=`${file.name} (${(file.size/1048576).toFixed(2)} MB)`;
-  try{
-    revoke(originalURL);revoke(workingURL);revoke(previewURL);
-    const url=URL.createObjectURL(file);originalURL=url;mainAudio.src=url;
-    const bytes=await file.arrayBuffer();
-    const ctx=new AudioContextClass();
-    const decoded=await ctx.decodeAudioData(bytes);
-    await ctx.close();
-    originalBuffer=decoded;workingBuffer=decoded;history=[];
-    detectedGroups=[];$("retakeResults").innerHTML="";
-    $("resultInfo").textContent="Original audio loaded. No edits applied yet.";
-    $("downloadBtn").style.display="none";
-    editedAudio.removeAttribute("src");
-    setStatus("silenceStatus",`Audio ready: ${decoded.duration.toFixed(2)} seconds.`);
-    setStatus("retakeStatus",model?"Audio ready. Detect retakes when you want.":"Audio ready. Load the AI model to detect retakes.");
-    setStatus("manualStatus","You can preview or manually cut a range.");
-    $("manualStart").value="0";$("manualEnd").value=decoded.duration.toFixed(2);
-    updateUI();drawTimeline();
-  }catch(e){
-    console.error(e);workingBuffer=null;originalBuffer=null;
-    setStatus("silenceStatus","Could not decode this file. Try WAV, MP3 or another browser-supported format.");
-    updateUI();
-  }
+file.addEventListener("change",async()=>{
+ const f=file.files?.[0];if(!f)return;
+ try{
+  setStatus("loadStatus","Loading and decoding audio...");
+  const ab=await f.arrayBuffer(),ac=new AudioCtx();const decoded=await ac.decodeAudioData(ab);await ac.close();
+  original=decoded;work=decoded;history=[];suggestions=[];selection=null;
+  $("fileInfo").textContent=`${f.name} · ${(f.size/1048576).toFixed(1)} MB · ${decoded.duration.toFixed(2)} sec`;
+  if(fileURL)URL.revokeObjectURL(fileURL);fileURL=URL.createObjectURL(f);player.src=fileURL;
+  publish();updateSelectionInfo();setStatus("loadStatus","Audio loaded. Use the timeline to play, select and delete.");
+ }catch(e){setStatus("loadStatus","Could not decode this file: "+e.message)}
 });
 
-$("maxGap").oninput=()=> $("gapValue").textContent=Number($("maxGap").value).toFixed(2);
-$("threshold").oninput=()=> $("thresholdValue").textContent=$("threshold").value;
+$("silenceBtn").onclick=()=>{
+ if(!work)return;
+ try{
+  const src=work,sr=src.sampleRate,frame=Math.max(1,Math.round(sr*.01)),count=Math.ceil(src.length/frame),threshold=Math.pow(10,Number($("threshold").value)/20),maxF=Math.floor(Number($("maxSilence").value)*sr/frame);
+  const data=Array.from({length:src.numberOfChannels},(_,c)=>src.getChannelData(c)),keep=new Uint8Array(count);let removed=0;
+  for(let f=0;f<count;f++){let sum=0,n=0,a=f*frame,b=Math.min(src.length,a+frame);for(let i=a;i<b;i++)for(const ch of data){sum+=ch[i]*ch[i];n++}keep[f]=Math.sqrt(sum/Math.max(1,n))>=threshold?1:0}
+  let f=0;while(f<count){if(keep[f]){f++;continue}let a=f;while(f<count&&!keep[f])f++;if(f-a<=maxF){for(let j=a;j<f;j++)keep[j]=1}else{for(let j=a;j<a+maxF;j++)keep[j]=1;removed+=f-a-maxF}}
+  let ranges=[],start=null;for(let i=0;i<count;i++){if(keep[i]&&start===null)start=i*frame;if((!keep[i]||i===count-1)&&start!==null){let end=keep[i]&&i===count-1?src.length:i*frame;ranges.push({start:start/sr,end:end/sr});start=null}}
+  const next=fromKeptRanges(src,ranges);pushHistory("Silence removal");work=next;selection=null;suggestions=[];$("aiList").innerHTML="";publish();updateSelectionInfo();setStatus("silenceStatus",`Silence removal complete. Approximately ${(removed*frame/sr).toFixed(2)} sec removed. Previous edits remain.`)
+ }catch(e){setStatus("silenceStatus","Error: "+e.message)}
+};
 
-$("silenceBtn").addEventListener("click",async()=>{
-  if(!workingBuffer)return;
-  $("silenceBtn").disabled=true;
-  try{
-    const src=workingBuffer,sr=src.sampleRate,frame=Math.max(1,Math.round(sr*.01));
-    const count=Math.ceil(src.length/frame),limit=Math.pow(10,Number($("threshold").value)/20);
-    const maxFrames=Math.floor(Number($("maxGap").value)*sr/frame);
-    const data=Array.from({length:src.numberOfChannels},(_,c)=>src.getChannelData(c));
-    const keep=new Uint8Array(count);keep.fill(1);
-    let removed=0;
-    for(let f=0;f<count;f++){
-      let sum=0,n=0,start=f*frame,end=Math.min(src.length,start+frame);
-      for(let i=start;i<end;i++)for(let c=0;c<src.numberOfChannels;c++){const x=data[c][i];sum+=x*x;n++;}
-      const rms=Math.sqrt(sum/Math.max(1,n));
-      if(rms<limit)keep[f]=0;
-    }
-    let f=0;
-    while(f<count){
-      if(keep[f]){f++;continue;}
-      const start=f;while(f<count&&!keep[f])f++;
-      if(f-start<=maxFrames){for(let j=start;j<f;j++)keep[j]=1;}
-      else{for(let j=start;j<start+maxFrames;j++)keep[j]=1;removed+=f-start-maxFrames;}
-    }
-    const ranges=[];let runStart=null;
-    for(let i=0;i<count;i++){
-      if(keep[i]&&runStart===null)runStart=i*frame;
-      if((!keep[i]||i===count-1)&&runStart!==null){
-        const end=keep[i]&&i===count-1?src.length:i*frame;
-        ranges.push({start:runStart/sr,end:end/sr});runStart=null;
-      }
-    }
-    const next=makeBufferFromRanges(src,ranges);
-    pushHistory("Silence removal");workingBuffer=next;publishWorkingAudio();
-    setStatus("silenceStatus",`Silence removal applied. Removed approximately ${(removed*frame/sr).toFixed(2)} sec. Previous edits were preserved.`);
-    setStatus("retakeStatus",model?"Working audio changed. Run detection again to analyze the latest edited audio.":"Load the AI model to detect retakes.");
-    detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
-  }catch(e){console.error(e);setStatus("silenceStatus","Error: "+e.message);}
-  finally{$("silenceBtn").disabled=false;updateUI();}
-});
-
-$("loadModelBtn").addEventListener("click",async()=>{
-  try{
-    $("loadModelBtn").disabled=true;setStatus("modelStatus","Loading Transformers.js...");
-    if(!transformerModule)transformerModule=await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1");
-    const {pipeline,env}=transformerModule;
-    env.allowLocalModels=false;env.useBrowserCache=true;
-    setStatus("modelStatus","Downloading/loading Whisper Tiny multilingual. First download may be large; keep this page open.");
-    model=await pipeline("automatic-speech-recognition","onnx-community/whisper-tiny",{dtype:"q8",progress_callback:p=>{
-      if(p.status==="progress")setStatus("modelStatus",`Downloading model: ${Math.round(p.progress||0)}%`);
-      else if(p.status==="ready")setStatus("modelStatus","Model files ready.");
-    }});
-    $("loadModelBtn").textContent="✓ AI Model Loaded";
-    setStatus("modelStatus","AI model loaded. Audio is processed in this browser.");
-    $("detectBtn").disabled=!workingBuffer;
-  }catch(e){
-    console.error(e);setStatus("modelStatus","Model loading failed: "+e.message);
-    $("loadModelBtn").disabled=false;
-  }
-});
-
-async function toMono16k(buffer,start,end){
-  const sr=buffer.sampleRate,first=Math.max(0,Math.floor(start*sr)),last=Math.min(buffer.length,Math.ceil(end*sr));
-  const len=last-first;if(len<=0)throw new Error("Invalid audio chunk.");
-  const monoCtx=new AudioContextClass();
-  const mono=monoCtx.createBuffer(1,len,sr),out=mono.getChannelData(0);
-  for(let c=0;c<buffer.numberOfChannels;c++){
-    const ch=buffer.getChannelData(c);
-    for(let i=0;i<len;i++)out[i]+=ch[first+i]/buffer.numberOfChannels;
-  }
-  await monoCtx.close();
-  const target=16000;
-  const offline=new OfflineAudioContext(1,Math.ceil(len*target/sr),target);
-  const source=offline.createBufferSource();source.buffer=mono;source.connect(offline.destination);source.start();
-  const rendered=await offline.startRendering();
-  return rendered.getChannelData(0);
+let transcriberModule=null;
+$("loadModel").onclick=async()=>{
+ try{
+  $("loadModel").disabled=true;setStatus("aiStatus","Loading Transformers.js...");
+  if(!transcriberModule)transcriberModule=await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1");
+  const {pipeline,env}=transcriberModule;env.allowLocalModels=false;env.useBrowserCache=true;
+  model=await pipeline("automatic-speech-recognition","onnx-community/whisper-tiny",{dtype:"q8",progress_callback:p=>{if(p.status==="progress")setStatus("aiStatus",`Downloading model ${Math.round(p.progress||0)}%`)}});
+  $("loadModel").textContent="✓ AI model loaded";$("detect").disabled=!work;setStatus("aiStatus","Model loaded locally in this browser. First download may take time.");
+ }catch(e){$("loadModel").disabled=false;setStatus("aiStatus","Model load failed: "+e.message)}
+};
+async function mono16k(buf,start,end){
+ const sr=buf.sampleRate,a=Math.floor(start*sr),b=Math.min(buf.length,Math.ceil(end*sr)),len=b-a;
+ const mono=new Float32Array(len);for(let c=0;c<buf.numberOfChannels;c++){let ch=buf.getChannelData(c);for(let i=0;i<len;i++)mono[i]+=ch[a+i]/buf.numberOfChannels}
+ const off=new OfflineAudioContext(1,Math.ceil(len*16000/sr),16000),ab=off.createBuffer(1,len,sr);ab.copyToChannel(mono,0);let src=off.createBufferSource();src.buffer=ab;src.connect(off.destination);src.start();let out=await off.startRendering();return out.getChannelData(0)
 }
-
-function norm(s){return s.toLocaleLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}]/gu,"");}
-
-async function transcribe(buffer){
-  const words=[],duration=buffer.duration,chunkSize=18,overlap=2,step=chunkSize-overlap;
-  const total=Math.ceil(duration/step);
-  for(let start=0,index=0;start<duration;start+=step,index++){
-    const end=Math.min(duration,start+chunkSize);
-    setStatus("retakeStatus",`Transcribing current edited audio: chunk ${index+1}/${total} (${Math.round(end/duration*100)}%). Keep the page open.`);
-    const audio=await toMono16k(buffer,start,end);
-    const result=await model(audio,{return_timestamps:true,task:"transcribe"});
-    const segments=result.chunks||[];
-    const chunks=segments.length?segments:(result.text?[{text:result.text,timestamp:[0,end-start]}]:[]);
-    for(const seg of chunks){
-      if(!seg.text)continue;
-      let a=seg.timestamp?.[0],b=seg.timestamp?.[1];
-      if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a){a=0;b=end-start;}
-      const tokens=seg.text.match(/\S+/gu)||[];
-      if(!tokens.length)continue;
-      // Whisper segment timestamps do not provide exact word boundaries.
-      // Equal word spacing is an estimate for review, never an exact alignment.
-      const span=b-a;
-      for(let i=0;i<tokens.length;i++){
-        const n=norm(tokens[i]);if(!n)continue;
-        const ws=start+a+span*i/tokens.length,we=start+a+span*(i+1)/tokens.length;
-        const prev=words.slice(-30).some(w=>w.normal===n&&Math.abs(w.start-ws)<.45);
-        if(!prev)words.push({text:tokens[i],normal:n,start:ws,end:we,estimated:true});
-      }
-    }
-    await new Promise(r=>setTimeout(r,20));
-  }
-  words.sort((a,b)=>a.start-b.start);return words;
+function norm(t){return t.toLocaleLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim()}
+async function transcribe(buf){
+ let segs=[],dur=buf.duration,chunk=18,overlap=2,step=16,total=Math.ceil(dur/step);
+ for(let start=0,i=0;start<dur;start+=step,i++){
+  let end=Math.min(dur,start+chunk);setStatus("aiStatus",`Transcribing audio section ${i+1}/${total} (${Math.round(end/dur*100)}%). Keep this page open.`);
+  let audio=await mono16k(buf,start,end),r=await model(audio,{return_timestamps:true,task:"transcribe"});
+  for(const c of (r.chunks||[])){let t=c.timestamp;if(!c.text||!t||!Number.isFinite(t[0])||!Number.isFinite(t[1])||t[1]<=t[0])continue;let text=c.text.trim(),n=norm(text);if(n.length<3)continue;let a=start+t[0],b=start+t[1];if(segs.some(x=>Math.abs(x.start-a)<.45&&x.normal===n))continue;segs.push({text,normal:n,start:a,end:b})}
+  await new Promise(r=>setTimeout(r,25));
+ }
+ return segs.sort((a,b)=>a.start-b.start)
 }
-
-function detectRepeated(words){
-  const min=Number($("minWords").value),maxGap=Number($("maxRetakeGap").value);
-  const map=new Map(),groups=new Map();
-  for(let i=0;i<=words.length-min;i++){
-    const key=words.slice(i,i+min).map(w=>w.normal).join("|");
-    if(!key)continue;
-    const prior=map.get(key)||[];
-    for(const j of prior){
-      const gap=words[i].start-words[j+min-1].end;
-      if(gap<0||gap>maxGap)continue;
-      let a=i,b=j;
-      while(a>0&&b>0&&words[a-1].normal===words[b-1].normal){a--;b--;}
-      let len=0;
-      while(a+len<words.length&&b+len<words.length&&words[a+len].normal===words[b+len].normal)len++;
-      if(len<min)continue;
-      const occ=[{start:words[b].start,end:words[b+len-1].end},{start:words[a].start,end:words[a+len-1].end}];
-      const signature=words.slice(b,b+len).map(w=>w.normal).join("|");
-      if(!groups.has(signature))groups.set(signature,{text:words.slice(b,b+len).map(w=>w.text).join(" "),occurrences:[]});
-      const g=groups.get(signature);
-      for(const o of occ)if(!g.occurrences.some(x=>Math.abs(x.start-o.start)<.7))g.occurrences.push(o);
-    }
-    prior.push(i);map.set(key,prior);
-  }
-  const arr=[...groups.values()].filter(g=>g.occurrences.length>1);
-  arr.forEach(g=>g.occurrences.sort((a,b)=>a.start-b.start));
-  arr.sort((a,b)=>(b.text.length-a.text.length));
-  const chosen=[];
-  for(const g of arr){
-    const duplicate=chosen.some(x=>x.occurrences.length===g.occurrences.length&&x.occurrences.every((o,i)=>Math.abs(o.start-g.occurrences[i].start)<1.0));
-    if(!duplicate)chosen.push(g);
-  }
-  return chosen;
+function detectSegments(segs){
+ const min=Number($("minWords").value),gap=Number($("maxGap").value),groups=new Map();
+ // Only compare whole timestamped Whisper segments. No guessed word timestamps.
+ for(let i=0;i<segs.length;i++)for(let j=i+1;j<segs.length;j++){
+  const a=segs[i],b=segs[j];if(b.start-a.end>gap)break;
+  const wa=a.normal.split(" "),wb=b.normal.split(" ");if(Math.min(wa.length,wb.length)<min)continue;
+  const shorter=wa.length<=wb.length?wa:wb,longer=wa.length<=wb.length?wb:wa;
+  let common=shorter.length>=min&&longer.join(" ").includes(shorter.join(" "));
+  if(!common)continue;
+  let key=shorter.join(" ");if(!groups.has(key))groups.set(key,{text:shorter.join(" "),occurrences:[]});
+  let g=groups.get(key);for(const s of [a,b])if(!g.occurrences.some(o=>Math.abs(o.start-s.start)<.5))g.occurrences.push({start:s.start,end:s.end});
+ }
+ return [...groups.values()].filter(g=>g.occurrences.length>1).map(g=>({...g,occurrences:g.occurrences.sort((a,b)=>a.start-b.start)})).sort((a,b)=>b.text.length-a.text.length)
 }
-
-function makePreviewBlob(buffer,start,end){
-  const s=Math.max(0,start),e=Math.min(buffer.duration,end);
-  if(e<=s)throw new Error("Preview end must be after start.");
-  const ranges=[{start:s,end:e}];
-  const clip=makeBufferFromRanges(buffer,ranges);
-  return encodeWav(clip);
-}
-
-let cutCandidates=[];
-let activeCutId=null;
-let dragMode=null;
-let timelinePps=8;
-const waveCanvas=$("waveCanvas"), waveCtx=waveCanvas.getContext("2d");
-let lastTimelineDraw=0;
-
-function timelineX(seconds){return seconds*timelinePps;}
-function drawTimeline(){
-  if(!workingBuffer)return;
-  const duration=workingBuffer.duration;
-  const cssWidth=Math.max(700,Math.min(30000,Math.ceil(duration*timelinePps)));
-  const h=180,dpr=Math.min(2,window.devicePixelRatio||1);
-  waveCanvas.style.width=cssWidth+"px";waveCanvas.style.height=h+"px";
-  waveCanvas.width=Math.floor(cssWidth*dpr);waveCanvas.height=Math.floor(h*dpr);
-  waveCtx.setTransform(dpr,0,0,dpr,0,0);
-  waveCtx.fillStyle="#111722";waveCtx.fillRect(0,0,cssWidth,h);
-  // timeline ticks
-  const tick=Math.max(5,Math.ceil(40/timelinePps/5)*5);
-  waveCtx.font="11px Arial";waveCtx.fillStyle="#b9c3d2";waveCtx.strokeStyle="#394456";waveCtx.lineWidth=1;
-  for(let t=0;t<=duration;t+=tick){const x=timelineX(t);waveCtx.beginPath();waveCtx.moveTo(x,20);waveCtx.lineTo(x,h);waveCtx.stroke();waveCtx.fillText(t+"s",x+3,13);}
-  // waveform peak envelope
-  const monoLength=workingBuffer.length, sr=workingBuffer.sampleRate;
-  const channels=Array.from({length:workingBuffer.numberOfChannels},(_,c)=>workingBuffer.getChannelData(c));
-  const pixels=Math.max(1,cssWidth-1), samplesPerPixel=Math.max(1,Math.floor(monoLength/pixels));
-  waveCtx.strokeStyle="#55e6a5";waveCtx.lineWidth=1;
-  for(let x=0;x<pixels;x++){
-    const a=x*samplesPerPixel,b=Math.min(monoLength,a+samplesPerPixel);let peak=0;
-    for(let i=a;i<b;i+=Math.max(1,Math.floor((b-a)/12)))for(const ch of channels)peak=Math.max(peak,Math.abs(ch[i]||0));
-    const amp=Math.max(1,peak*67);waveCtx.beginPath();waveCtx.moveTo(x,95-amp);waveCtx.lineTo(x,95+amp);waveCtx.stroke();
-  }
-  // all candidate cut ranges
-  for(const c of cutCandidates){
-    const x=timelineX(c.start),w=Math.max(2,timelineX(c.end-c.start));
-    waveCtx.fillStyle=c.id===activeCutId?"rgba(255,179,71,.42)":"rgba(232,75,95,.22)";
-    waveCtx.fillRect(x,22,w,145);
-    waveCtx.strokeStyle=c.id===activeCutId?"#ffb347":"#e85b70";waveCtx.lineWidth=c.id===activeCutId?3:1;
-    waveCtx.strokeRect(x,22,w,145);
-  }
-  // playhead
-  const px=timelineX(mainAudio.currentTime||0);waveCtx.strokeStyle="#ffffff";waveCtx.lineWidth=2;waveCtx.beginPath();waveCtx.moveTo(px,18);waveCtx.lineTo(px,177);waveCtx.stroke();
-  if(activeCutId){const c=cutCandidates.find(x=>x.id===activeCutId);if(c){waveCtx.fillStyle="#ffb347";for(const x of [timelineX(c.start),timelineX(c.end)])waveCtx.fillRect(x-5,20,10,150);}}
-}
-function setActiveCut(id){
-  const c=cutCandidates.find(x=>x.id===id);if(!c)return;
-  activeCutId=id;$("cutStart").value=c.start.toFixed(2);$("cutEnd").value=c.end.toFixed(2);
-  $("activeCutInfo").textContent=`Editing ${c.label}. Drag orange handles on the waveform or adjust the time fields. This candidate is ${c.checked?"selected for removal":"not selected for removal"}.`;
-  document.querySelectorAll(".cut-row").forEach(el=>el.classList.toggle("active",el.dataset.id===id));
-  const x=timelineX(c.start);$("waveScroll").scrollLeft=Math.max(0,x-120);drawTimeline();
-}
-function syncActiveInputs(){
-  const c=cutCandidates.find(x=>x.id===activeCutId);if(!c)return;
-  const a=Number($("cutStart").value),b=Number($("cutEnd").value);
-  if(Number.isFinite(a)&&Number.isFinite(b)&&a>=0&&b<=workingBuffer.duration&&b>a){c.start=a;c.end=b;drawTimeline();}
-}
-$("cutStart").addEventListener("change",syncActiveInputs);$("cutEnd").addEventListener("change",syncActiveInputs);
-$("timelineZoom").addEventListener("input",()=>{timelinePps=Number($("timelineZoom").value);$("zoomLabel").textContent=timelinePps;drawTimeline();});
-mainAudio.addEventListener("timeupdate",()=>{const now=performance.now();if(workingBuffer&&waveCanvas.width&&now-lastTimelineDraw>900){lastTimelineDraw=now;drawTimeline();}});
-waveCanvas.addEventListener("pointerdown",e=>{
-  if(!workingBuffer)return;const rect=waveCanvas.getBoundingClientRect();const x=(e.clientX-rect.left);const c=cutCandidates.find(z=>z.id===activeCutId);
-  if(c&&Math.abs(x-timelineX(c.start))<18)dragMode="start";
-  else if(c&&Math.abs(x-timelineX(c.end))<18)dragMode="end";
-  else{mainAudio.currentTime=Math.max(0,Math.min(workingBuffer.duration,x/timelinePps));drawTimeline();return;}
-  waveCanvas.setPointerCapture(e.pointerId);
-});
-waveCanvas.addEventListener("pointermove",e=>{
-  if(!dragMode||!activeCutId)return;const c=cutCandidates.find(z=>z.id===activeCutId);if(!c)return;
-  const rect=waveCanvas.getBoundingClientRect();const t=Math.max(0,Math.min(workingBuffer.duration,(e.clientX-rect.left)/timelinePps));
-  if(dragMode==="start")c.start=Math.min(t,c.end-.05);else c.end=Math.max(t,c.start+.05);
-  $("cutStart").value=c.start.toFixed(2);$("cutEnd").value=c.end.toFixed(2);drawTimeline();
-});
-waveCanvas.addEventListener("pointerup",()=>{dragMode=null;});waveCanvas.addEventListener("pointercancel",()=>{dragMode=null;});
-
-function renderResults(){
-  const root=$("retakeResults");root.innerHTML="";cutCandidates=[];activeCutId=null;
-  if(!detectedGroups.length){root.textContent="No repeated speech detected. This does not guarantee that no retakes exist.";drawTimeline();return;}
-  detectedGroups.forEach((g,idx)=>{
-    const box=document.createElement("div");box.className="item";
-    const title=document.createElement("b");title.textContent=`AI suggestion #${idx+1} · ${g.occurrences.length} matching attempts`;box.append(title);
-    const sentence=document.createElement("p");sentence.textContent=`Recognized phrase: “${g.text}”`;box.append(sentence);
-    const hint=document.createElement("p");hint.className="info";hint.textContent="Each earlier attempt is a separate optional cut. The last attempt is kept automatically. AI times are approximate; preview and adjust.";box.append(hint);
-    g.occurrences.forEach((o,oi)=>{
-      const isLast=oi===g.occurrences.length-1;
-      if(isLast){const keep=document.createElement("p");keep.className="good";keep.textContent=`✓ Attempt ${oi+1} kept by default (${o.start.toFixed(2)}–${o.end.toFixed(2)} sec)`;box.append(keep);return;}
-      const id=`g${idx}a${oi}`;const c={id,start:o.start,end:o.end,checked:false,label:`Suggestion ${idx+1}, attempt ${oi+1}`};cutCandidates.push(c);
-      const row=document.createElement("div");row.className="cut-row";row.dataset.id=id;
-      const cb=document.createElement("input");cb.type="checkbox";cb.addEventListener("change",()=>{c.checked=cb.checked;});
-      const meta=document.createElement("div");meta.innerHTML="";const strong=document.createElement("b");strong.textContent=`Attempt ${oi+1} · proposed cut`;const small=document.createElement("div");small.className="attempt-meta";small.textContent=`${o.start.toFixed(2)}s – ${o.end.toFixed(2)}s`;
-      const focus=document.createElement("button");focus.className="secondary";focus.textContent="Edit on timeline";focus.addEventListener("click",()=>setActiveCut(id));
-      row.append(cb,meta,focus);meta.append(strong,small);box.append(row);
-    });root.append(box);
+$("detect").onclick=async()=>{
+ if(!model||!work)return;
+ $("detect").disabled=true;try{
+  const source=work;setStatus("aiStatus","Starting transcription...");
+  aiSegments=await transcribe(source);if(work!==source)throw Error("Audio changed during analysis. Run detection again.");
+  const groups=detectSegments(aiSegments);suggestions=[];
+  const list=$("aiList");list.innerHTML="";
+  if(!groups.length){list.textContent="No reliable repeated timestamped segments found. This does not prove there are no retakes.";setStatus("aiStatus","Analysis finished. No reliable repeated segments found.");return}
+  groups.forEach((g,gi)=>{
+   const box=document.createElement("div");box.className="suggestion";
+   const p=document.createElement("p");p.innerHTML="";p.textContent=`Possible repeated speech #${gi+1}: “${g.text}”`;box.append(p);
+   g.occurrences.forEach((o,oi)=>{
+    const isLast=oi===g.occurrences.length-1;
+    const meta=document.createElement("p");meta.className="meta";meta.textContent=`Attempt ${oi+1}: ${o.start.toFixed(2)}–${o.end.toFixed(2)} sec ${isLast?"(last attempt — keep by default)":"(earlier attempt — review)"}`;box.append(meta);
+    if(!isLast){const btn=document.createElement("button");btn.className="blue";btn.textContent="Show this attempt on timeline";btn.onclick=()=>{selection={start:o.start,end:o.end};updateSelectionInfo();draw();scroll.scrollLeft=Math.max(0,timeX(o.start)-80);seek(o.start)};box.append(btn);suggestions.push({start:o.start,end:o.end})}
+   });list.append(box);
   });
-  $("selectAllBtn").disabled=false;$("clearAllBtn").disabled=false;$("applyRetakesBtn").disabled=cutCandidates.length===0;
-  if(cutCandidates.length)setActiveCut(cutCandidates[0].id);drawTimeline();
-}
-
-$("detectBtn").addEventListener("click",async()=>{
-  if(!model||!workingBuffer)return;
-  $("detectBtn").disabled=true;$("applyRetakesBtn").disabled=true;
-  try{
-    const analyzed=workingBuffer;
-    setStatus("retakeStatus","Starting transcription of the current edited audio...");
-    const words=await transcribe(analyzed);
-    if(workingBuffer!==analyzed)throw new Error("Audio changed during detection. Please detect again.");
-    if(!words.length)throw new Error("No speech was recognized.");
-    detectedGroups=detectRepeated(words);detectionBufferRef=workingBuffer;renderResults();
-    setStatus("retakeStatus",`Analysis complete. Found ${detectedGroups.length} possible repeated sections. Review and listen before applying.`);
-  }catch(e){console.error(e);setStatus("retakeStatus","Detection error: "+e.message);}
-  finally{$("detectBtn").disabled=!workingBuffer||!model;}
-});
-
-$("selectAllBtn").onclick=()=>{document.querySelectorAll("#retakeResults .cut-row input[type=checkbox]").forEach(x=>{x.checked=true;x.dispatchEvent(new Event("change"));});};
-$("clearAllBtn").onclick=()=>{document.querySelectorAll("#retakeResults .cut-row input[type=checkbox]").forEach(x=>{x.checked=false;x.dispatchEvent(new Event("change"));});};
-
-$("applyRetakesBtn").addEventListener("click",()=>{
-  try{
-    if(workingBuffer!==detectionBufferRef)throw new Error("The working audio changed after detection. Please detect again.");
-    const chosen=cutCandidates.filter(c=>c.checked);
-    if(!chosen.length)throw new Error("Tick at least one proposed attempt to cut.");
-    let cuts=chosen.map(c=>({start:Math.max(0,c.start),end:Math.min(workingBuffer.duration,c.end)})).filter(c=>c.end>c.start);
-    cuts.sort((a,b)=>a.start-b.start);const merged=[];
-    for(const c of cuts){const last=merged[merged.length-1];if(last&&c.start<=last.end)last.end=Math.max(last.end,c.end);else merged.push({...c});}
-    const ranges=[];let pos=0;for(const c of merged){if(c.start>pos)ranges.push({start:pos,end:c.start});pos=Math.max(pos,c.end);}if(pos<workingBuffer.duration)ranges.push({start:pos,end:workingBuffer.duration});
-    if(!ranges.length)throw new Error("The selected cuts would remove the entire audio.");
-    const next=makeBufferFromRanges(workingBuffer,ranges);pushHistory("AI retake cuts");workingBuffer=next;publishWorkingAudio();
-    const seconds=merged.reduce((sum,c)=>sum+c.end-c.start,0);
-    setStatus("retakeStatus",`Applied ${chosen.length} manually reviewed cut range(s). Removed ${seconds.toFixed(2)} sec. Previous silence edits are preserved.`);
-    detectedGroups=[];cutCandidates=[];activeCutId=null;$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;drawTimeline();
-  }catch(e){console.error(e);setStatus("retakeStatus","Could not apply cuts: "+e.message);}
-});
-
-$("previewManualBtn").onclick=()=>{
-  try{
-    const s=Number($("manualStart").value),e=Number($("manualEnd").value);
-    const blob=makePreviewBlob(workingBuffer,Math.max(0,s-2),Math.min(workingBuffer.duration,e+2));
-    revoke(previewURL);previewURL=URL.createObjectURL(blob);previewAudio.src=previewURL;previewAudio.play();
-    setStatus("manualStatus","Playing selected range with 2 seconds of surrounding context (where available).");
-  }catch(e){setStatus("manualStatus",e.message);}
+  draw();setStatus("aiStatus",`Analysis complete. ${suggestions.length} earlier attempt(s) highlighted in red. Tap a suggestion to inspect it; delete only after listening.`);
+ }catch(e){console.error(e);setStatus("aiStatus","Detection failed: "+e.message)}
+ finally{$("detect").disabled=!work||!model}
 };
-
-$("applyManualBtn").onclick=()=>{
-  try{
-    const s=Number($("manualStart").value),e=Number($("manualEnd").value);
-    if(!Number.isFinite(s)||!Number.isFinite(e)||s<0||e>workingBuffer.duration||e<=s)throw new Error("Enter a valid start and end time within the current audio duration.");
-    const next=makeBufferFromRanges(workingBuffer,[{start:0,end:s},{start:e,end:workingBuffer.duration}]);
-    pushHistory("Manual cut");workingBuffer=next;publishWorkingAudio();
-    detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
-    setStatus("manualStatus",`Cut ${s.toFixed(2)}s–${e.toFixed(2)}s. Earlier edits remain applied. Update times before another cut.`);
-    $("manualStart").value="0";$("manualEnd").value=workingBuffer.duration.toFixed(2);
-  }catch(e){setStatus("manualStatus","Cut failed: "+e.message);}
-};
-
-$("undoBtn").onclick=()=>{
-  if(!history.length)return;
-  const previous=history.pop();workingBuffer=previous.buffer;publishWorkingAudio();
-  setStatus("silenceStatus",`Undo completed: ${previous.label} was undone. Other earlier edits remain.`);
-  detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
-  setStatus("retakeStatus","Audio changed. Run detection again before applying retake suggestions.");
-};
-
-$("resetBtn").onclick=()=>{
-  if(!originalBuffer)return;
-  if(!confirm("Reset all edits and return to the original uploaded audio?"))return;
-  workingBuffer=originalBuffer;history=[];publishWorkingAudio();
-  detectedGroups=[];$("retakeResults").innerHTML="";$("applyRetakesBtn").disabled=true;
-  setStatus("silenceStatus","All edits reset to original upload.");
-  setStatus("retakeStatus","Run detection again if you want to analyze the original audio.");
-};
-
-updateUI();
+window.addEventListener("resize",()=>draw());
+updateSelectionInfo();
 </script>
 </body>
 </html>
